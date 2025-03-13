@@ -1,0 +1,401 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - MentalSpace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        /* Global Styles */
+        :root {
+            --primary-color: #121212;
+            --secondary-color: gold;
+            --accent-color: rgba(255, 215, 0, 0.1);
+            --text-color: white;
+            --card-bg: rgba(0, 0, 0, 0.6);
+            --card-hover: rgba(0, 0, 0, 0.7);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            background-image: linear-gradient(rgba(0, 0, 0, 0.6), rgba(0, 0, 0, 0.7)), url('quantum-particle-animation.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            color: var(--text-color);
+            line-height: 1.6;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 10px;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            width: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .brand a {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--text-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .brand a i {
+            margin-right: 10px;
+            color: var(--secondary-color);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-item a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s ease, transform 0.3s ease;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-item a:hover {
+            color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .nav-item a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: var(--secondary-color);
+            transition: width 0.3s ease;
+        }
+
+        .nav-item a:hover::after {
+            width: 100%;
+        }
+
+        /* Login Container */
+        .login-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            flex: 1;
+            padding: 20px;
+        }
+
+        .login-box {
+            background: var(--card-bg);
+            padding: 40px;
+            border-radius: 15px;
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 450px;
+            width: 100%;
+            border-top: 3px solid var(--secondary-color);
+            animation: fadeIn 0.8s ease;
+            transform: translateY(0);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .login-box:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .login-box h2 {
+            font-size: 28px;
+            margin-bottom: 25px;
+            color: var(--secondary-color);
+            font-weight: 600;
+        }
+
+        .login-box label {
+            display: block;
+            text-align: left;
+            font-size: 16px;
+            margin-top: 15px;
+            color: var(--text-color);
+            margin-bottom: 5px;
+        }
+
+        .input-group {
+            position: relative;
+            margin-bottom: 20px;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            top: 15px;
+            color: #aaa;
+            transition: color 0.3s ease;
+        }
+
+        .login-box input {
+            width: 100%;
+            padding: 12px 15px 12px 45px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 8px;
+            font-size: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-color);
+            transition: all 0.3s ease;
+        }
+
+        .login-box input:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+            outline: none;
+        }
+
+        .login-box input:focus + i {
+            color: var(--secondary-color);
+        }
+
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 15px;
+            margin-top: 30px;
+            background: var(--secondary-color);
+            border: none;
+            border-radius: 8px;
+            color: #111;
+            font-size: 18px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: #ffdb4d;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .login-box p {
+            margin-top: 25px;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .login-box a {
+            color: var(--secondary-color);
+            text-decoration: none;
+            font-weight: 500;
+            transition: color 0.3s ease;
+        }
+
+        .login-box a:hover {
+            text-decoration: underline;
+            color: #ffdb4d;
+        }
+
+        /* Animations */
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        /* Media Queries */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px;
+            }
+            
+            .nav-list {
+                gap: 15px;
+            }
+            
+            .brand a {
+                font-size: 22px;
+            }
+            
+            .login-box {
+                padding: 30px 20px;
+            }
+            
+            .login-box h2 {
+                font-size: 24px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <div class="brand">
+                <a href="/index.html"><i class="fas fa-brain"></i>MentalSpace</a>
+            </div>
+            <nav class="navigation" id="navigation">
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="/index.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li class="nav-item"><a href="/forums.html"><i class="fas fa-comments"></i> Forum</a></li>
+                    <li class="nav-item"><a href="/articles.html"><i class="fas fa-book"></i> Articles</a></li>
+                </ul>
+            </nav>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              // Check if user is logged in
+              const userJSON = localStorage.getItem('user');
+              
+              // Reference to navbar elements
+              const navList = document.querySelector('.nav-list');
+              const loginItem = document.querySelector('.nav-item .login-btn')?.parentElement;
+              
+              if (userJSON && loginItem) {
+                // User is logged in, replace login button with username and logout
+                const user = JSON.parse(userJSON);
+                
+                // Remove the login button
+                loginItem.remove();
+                
+                // Create username item
+                const usernameItem = document.createElement('li');
+                usernameItem.className = 'nav-item';
+                usernameItem.innerHTML = `<a href="#"><i class="fas fa-user-circle"></i> ${user.name}</a>`;
+                
+                // Create logout item
+                const logoutItem = document.createElement('li');
+                logoutItem.className = 'nav-item';
+                logoutItem.innerHTML = `<a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>`;
+                
+                // Add the new items to the navbar
+                navList.appendChild(usernameItem);
+                navList.appendChild(logoutItem);
+                
+                // Add logout functionality
+                document.getElementById('logout-btn').addEventListener('click', async function(e) {
+                  e.preventDefault();
+                  
+                  try {
+                    await fetch('/api/logout');
+                    
+                    // Clear user data from localStorage
+                    localStorage.removeItem('user');
+                    
+                    // Redirect to home page
+                    window.location.href = '/index.html';
+                  } catch (error) {
+                    console.error('Error during logout:', error);
+                    alert('Error logging out. Please try again.');
+                  }
+                });
+              }
+            });
+            </script>
+    </header>
+
+    <section class="login-container">
+        <div class="login-box">
+            <h2>Login to MentalSpace</h2>
+            <form action="#" method="POST">
+                <div class="input-group">
+                    <input type="text" id="username" name="username" placeholder="Username or Email" required>
+                    <i class="fas fa-user"></i>
+                </div>
+
+                <div class="input-group">
+                    <input type="password" id="password" name="password" placeholder="Password" required>
+                    <i class="fas fa-lock"></i>
+                </div>
+
+                <button type="submit" class="btn">Login</button>
+            </form>
+            <p>Don't have an account? <a href="/signup.html">Sign up here</a></p>
+        </div>
+    </section>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+          // Check if user is already logged in
+          const userJSON = localStorage.getItem('user');
+          if (userJSON) {
+            window.location.href = '/index.html'; // Redirect to home page if already logged in
+          }
+          
+          const loginForm = document.querySelector('form');
+          
+          loginForm.addEventListener('submit', async function(e) {
+            e.preventDefault();
+            
+            const email = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (!email || !password) {
+              alert('Please enter both email and password');
+              return;
+            }
+            
+            try {
+              const response = await fetch('/api/login', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({ email, password })
+              });
+              
+              const data = await response.json();
+              
+              if (response.ok) {
+                // Store user data in localStorage
+                localStorage.setItem('user', JSON.stringify(data.user));
+                window.location.href = '/index.html';
+              } else {
+                alert(data.message || 'Login failed');
+              }
+            } catch (error) {
+              console.error('Error during login:', error);
+              alert('An error occurred during login. Please try again.');
+            }
+          });
+        });
+        </script>
+</body>
+</html>

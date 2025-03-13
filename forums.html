@@ -1,0 +1,2726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Forums - MentalSpace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Firebase SDK -->
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <style>
+        /* Global Styles */
+        :root {
+            --primary-color: #121212;
+            --secondary-color: gold;
+            --accent-color: rgba(255, 215, 0, 0.1);
+            --text-color: white;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-hover: rgba(255, 255, 255, 0.12);
+            --professional-post: rgba(255, 215, 0, 0.15);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 10px;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .brand a {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--text-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .brand a i {
+            margin-right: 10px;
+            color: var(--secondary-color);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-item a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s ease, transform 0.3s ease;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-item a:hover {
+            color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .nav-item a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: var(--secondary-color);
+            transition: width 0.3s ease;
+        }
+
+        .nav-item a:hover::after {
+            width: 100%;
+        }
+
+        /* Forum Content */
+        .forum-content {
+            padding: 120px 50px 60px;
+            background-image: url('quantum-particle-animation.webp');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            min-height: 100vh;
+        }
+
+        /* Search Bar */
+        .search-container {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 30px;
+            position: relative;
+            width: 100%;
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border-radius: 30px;
+            border: 2px solid var(--secondary-color);
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--text-color);
+            font-size: 16px;
+            outline: none;
+            transition: all 0.3s ease;
+        }
+
+        .search-bar:focus {
+            box-shadow: 0 0 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 18px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-color);
+            font-size: 18px;
+        }
+
+        /* Category Navigation */
+        .category-nav {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin: 0 auto 40px;
+            max-width: 1000px;
+        }
+
+        .category-btn {
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-size: 15px;
+            border: 2px solid var(--secondary-color);
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .category-btn.active {
+            background: var(--secondary-color);
+            color: black;
+        }
+
+        .category-btn:hover {
+            background: var(--secondary-color);
+            color: black;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .category-btn i {
+            font-size: 16px;
+        }
+
+        /* Buttons */
+        button {
+            padding: 12px 25px;
+            border-radius: 8px;
+            font-size: 16px;
+            border: 2px solid var(--secondary-color);
+            background: transparent;
+            color: var(--text-color);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        button:hover {
+            background: var(--secondary-color);
+            color: black;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.2);
+        }
+
+        button i {
+            font-size: 16px;
+        }
+
+        /* Post Buttons */
+        .post-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 40px;
+        }
+
+        .host-conversation-btn {
+            font-size: 18px;
+            font-weight: 600;
+            padding: 15px 30px;
+            border-radius: 30px;
+            letter-spacing: 0.5px;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Section Headings */
+        .section-heading {
+            font-size: 24px;
+            font-weight: 600;
+            color: var(--secondary-color);
+            margin-bottom: 25px;
+            text-align: center;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .section-heading::after {
+            content: '';
+            position: absolute;
+            width: 60px;
+            height: 3px;
+            background-color: var(--secondary-color);
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+        }
+
+        /* Posts Container */
+        .category-section {
+            margin-bottom: 50px;
+        }
+
+        .posts {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .post {
+            background: var(--card-bg);
+            padding: 25px;
+            border-radius: 12px;
+            box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s;
+            width: 100%;
+            max-width: 800px;
+            text-align: left;
+            border-left: 4px solid transparent;
+        }
+
+        .post:hover {
+            transform: translateY(-5px);
+            box-shadow: 0px 8px 20px rgba(0, 0, 0, 0.4);
+            background: var(--card-hover);
+        }
+
+        .post.professional {
+            background: var(--professional-post);
+            border-left: 4px solid var(--secondary-color);
+        }
+
+        .post-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .user-details {
+            font-size: 16px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            font-weight: bold;
+            color: black;
+        }
+
+        .professional-badge {
+            background: var(--secondary-color);
+            color: black;
+            font-size: 12px;
+            padding: 3px 8px;
+            border-radius: 4px;
+            margin-left: 10px;
+            font-weight: 600;
+        }
+
+        .post-timestamp {
+            font-size: 14px;
+            opacity: 0.7;
+            margin-top: 5px;
+        }
+
+        .post-stats {
+            display: flex;
+            gap: 15px;
+            font-size: 14px;
+            opacity: 0.8;
+        }
+
+        .post-stats .stat {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .post-stats i {
+            color: var(--secondary-color);
+        }
+
+        .post-body {
+            margin-bottom: 20px;
+            font-size: 16px;
+            line-height: 1.7;
+        }
+
+        .post-body p {
+            margin-bottom: 15px;
+        }
+
+        .post-body p:last-child {
+            margin-bottom: 0;
+        }
+
+        .post-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin-bottom: 15px;
+        }
+
+        .tag {
+            background: rgba(255, 215, 0, 0.15);
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 12px;
+            color: var(--secondary-color);
+        }
+
+        .post-actions {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .post-actions-left {
+            display: flex;
+            gap: 10px;
+        }
+
+        .post-actions-right {
+            display: flex;
+            gap: 10px;
+        }
+
+        .reply-btn, .edit-btn, .delete-btn {
+            padding: 8px 20px;
+            font-size: 14px;
+        }
+
+        .edit-btn {
+            background: rgba(0, 100, 255, 0.2);
+            border-color: #4da6ff;
+        }
+
+        .edit-btn:hover {
+            background: #4da6ff;
+        }
+
+        .delete-btn {
+            background: rgba(255, 50, 50, 0.2);
+            border-color: #ff5050;
+        }
+
+        .delete-btn:hover {
+            background: #ff5050;
+        }
+
+        /* Popup Styling */
+        .popup-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+
+        .popup {
+            background: rgba(20, 20, 20, 0.95);
+            padding: 35px;
+            border-radius: 15px;
+            box-shadow: 0px 8px 25px rgba(0, 0, 0, 0.5);
+            width: 90%;
+            max-width: 600px;
+            text-align: center;
+            transform: translateY(30px);
+            opacity: 0;
+            transition: transform 0.3s ease-in-out, opacity 0.3s ease-in-out;
+            position: relative;
+        }
+
+        .popup-overlay.active {
+            display: flex;
+            opacity: 1;
+        }
+
+        .popup-overlay.active .popup {
+            transform: translateY(0);
+            opacity: 1;
+        }
+
+        .popup h2 {
+            margin-bottom: 20px;
+            font-size: 24px;
+            color: var(--secondary-color);
+        }
+
+        .popup textarea {
+            width: 100%;
+            height: 150px;
+            padding: 15px;
+            border-radius: 8px;
+            border: 1px solid var(--secondary-color);
+            font-size: 16px;
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--text-color);
+            outline: none;
+            resize: none;
+            margin-bottom: 20px;
+            transition: all 0.3s;
+        }
+
+        .popup textarea:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .popup .category-select {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--text-color);
+            border: 1px solid var(--secondary-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .popup .category-select option {
+            background: #1a1a1a;
+        }
+
+        .popup .tags-input {
+            width: 100%;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.5);
+            color: var(--text-color);
+            border: 1px solid var(--secondary-color);
+            border-radius: 8px;
+            margin-bottom: 20px;
+            font-size: 16px;
+            outline: none;
+        }
+
+        .popup .submit-btn {
+            padding: 12px 30px;
+            font-size: 16px;
+            width: auto;
+            margin: 0 auto;
+            display: block;
+        }
+
+        .close-btn {
+            color: var(--text-color);
+            font-size: 24px;
+            cursor: pointer;
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            background: none;
+            border: none;
+            transition: all 0.3s;
+        }
+
+        .close-btn:hover {
+            color: var(--secondary-color);
+            transform: none;
+            background: none;
+            box-shadow: none;
+        }
+
+        /* Formatting Tools */
+        .formatting-tools {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-bottom: 15px;
+            justify-content: center;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 10px;
+            border-radius: 8px;
+        }
+
+        .format-btn {
+            border: none;
+            padding: 8px;
+            cursor: pointer;
+            font-size: 16px;
+            color: var(--text-color);
+            background: transparent;
+            transition: 0.3s;
+            border-radius: 4px;
+        }
+
+        .format-btn:hover {
+            color: var(--secondary-color);
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        /* Custom notification styles */
+        .notification-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.7);
+            z-index: 1100;
+            display: none;
+            backdrop-filter: blur(5px);
+        }
+
+        .notification-popup {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(20, 20, 20, 0.95);
+            border: 2px solid var(--secondary-color);
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(255, 215, 0, 0.3);
+            padding: 30px;
+            z-index: 1200;
+            max-width: 450px;
+            width: 90%;
+            text-align: center;
+            display: none;
+        }
+
+        .notification-popup h3 {
+            margin-top: 0;
+            color: var(--secondary-color);
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .notification-popup p {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: var(--text-color);
+            font-size: 16px;
+        }
+
+        .notification-btn {
+            background-color: var(--secondary-color);
+            color: black;
+            border: none;
+            padding: 12px 25px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 15px;
+            margin: 0 8px;
+        }
+
+        .notification-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        .notification-btn.secondary {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--text-color);
+        }
+
+        .notification-btn.secondary:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Comments Styling */
+        .comments-container {
+            margin-top: 15px;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            padding-top: 15px;
+            max-height: 400px;
+            overflow-y: auto;
+            display: none;
+            /* Fix the weird slider */
+            overflow-x: hidden;
+        }
+
+        .comment {
+            padding: 15px;
+            border-radius: 8px;
+            background: rgba(0, 0, 0, 0.3);
+            margin-bottom: 10px;
+            position: relative;
+        }
+
+        .comment:last-child {
+            margin-bottom: 0;
+        }
+
+        .comment-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 20px; /* Increased spacing to prevent overlap */
+            font-size: 14px;
+        }
+
+        .comment-author {
+            font-weight: 600;
+            color: var(--secondary-color);
+        }
+
+        .comment-date {
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 12px;
+            margin-right: 70px; /* Add margin to prevent overlap with action buttons */
+        }
+
+        .comment-content {
+            color: var(--text-color);
+            line-height: 1.5;
+            font-size: 14px;
+        }
+
+        .comment-actions {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            display: flex;
+            gap: 10px;
+            z-index: 5; /* Ensure buttons are above other elements */
+        }
+
+        .comment-edit-btn, .comment-delete-btn {
+            background: none;
+            border: none;
+            padding: 3px 5px; /* Smaller padding for better appearance */
+            font-size: 14px;
+            cursor: pointer;
+            color: rgba(255, 255, 255, 0.5);
+            transition: color 0.3s;
+        }
+
+        .comment-edit-btn:hover {
+            color: #4da6ff;
+        }
+
+        .comment-delete-btn:hover {
+            color: #ff5050;
+        }
+
+        .toggle-comments-btn {
+            background: transparent;
+            color: var(--text-color);
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 14px;
+            display: flex;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .toggle-comments-btn:hover {
+            background: rgba(255, 215, 0, 0.1);
+            color: var(--secondary-color);
+        }
+
+        .comment-form {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .comment-input {
+            flex: 1;
+            border: 1px solid rgba(255, 215, 0, 0.3);
+            border-radius: 8px;
+            padding: 12px 15px;
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-color);
+            font-size: 14px;
+            outline: none;
+        }
+
+        .comment-input:focus {
+            border-color: var(--secondary-color);
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.2);
+        }
+
+        .comment-submit {
+            background: var(--secondary-color);
+            color: black;
+            border: none;
+            border-radius: 8px;
+            padding: 0 15px;
+            cursor: pointer;
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .comment-submit:hover {
+            background: var(--secondary-color);
+            transform: translateY(-2px);
+            box-shadow: 0 3px 10px rgba(255, 215, 0, 0.3);
+        }
+
+        .no-comments {
+            text-align: center;
+            padding: 20px;
+            color: rgba(255, 255, 255, 0.5);
+            font-style: italic;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 8px;
+        }
+
+        .no-results-message {
+            text-align: center;
+            padding: 25px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 12px;
+            margin: 30px auto;
+            max-width: 600px;
+            color: rgba(255, 255, 255, 0.7);
+            border: 1px solid rgba(255, 215, 0, 0.2);
+        }
+
+        /* Confirmation dialog */
+        .confirm-dialog {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.9);
+            background: rgba(20, 20, 20, 0.95);
+            border: 2px solid #ff5050;
+            border-radius: 15px;
+            box-shadow: 0 4px 30px rgba(255, 80, 80, 0.3);
+            padding: 25px;
+            z-index: 1300;
+            max-width: 400px;
+            width: 90%;
+            text-align: center;
+            display: none;
+            opacity: 0;
+            transition: all 0.3s;
+        }
+
+        .confirm-dialog.active {
+            display: block;
+            opacity: 1;
+            transform: translate(-50%, -50%) scale(1);
+        }
+
+        .confirm-dialog h3 {
+            margin-top: 0;
+            color: #ff5050;
+            font-size: 22px;
+            margin-bottom: 15px;
+        }
+
+        .confirm-dialog p {
+            margin-bottom: 25px;
+            line-height: 1.6;
+            color: var(--text-color);
+            font-size: 16px;
+        }
+
+        .confirm-dialog-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .confirm-btn {
+            background-color: #ff5050;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .confirm-btn:hover {
+            background-color: #ff3030;
+            transform: translateY(-2px);
+        }
+
+        .cancel-btn {
+            background-color: rgba(255, 255, 255, 0.15);
+            color: var(--text-color);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 25px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: all 0.3s;
+            font-size: 14px;
+        }
+
+        .cancel-btn:hover {
+            background-color: rgba(255, 255, 255, 0.25);
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .navbar {
+                padding: 15px;
+            }
+            
+            .forum-content {
+                padding: 100px 20px 40px;
+            }
+            
+            .nav-list {
+                gap: 15px;
+            }
+            
+            .brand a {
+                font-size: 22px;
+            }
+            
+            .post {
+                width: 95%;
+                padding: 20px;
+            }
+            
+            .category-nav {
+                gap: 10px;
+            }
+            
+            .category-btn {
+                padding: 8px 15px;
+                font-size: 14px;
+            }
+            
+            .host-conversation-btn {
+                padding: 12px 25px;
+                font-size: 16px;
+            }
+            
+            .section-heading {
+                font-size: 20px;
+            }
+            
+            .popup {
+                padding: 25px;
+                width: 95%;
+            }
+            
+            .post-stats {
+                flex-direction: column;
+                gap: 5px;
+            }
+
+            .post-actions {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+            
+            .post-actions-left, .post-actions-right {
+                width: 100%;
+                justify-content: space-between;
+            }
+        }
+
+        /* Loading indicator */
+        .loading-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px;
+            text-align: center;
+        }
+        
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 215, 0, 0.2);
+            border-radius: 50%;
+            border-top-color: var(--secondary-color);
+            animation: spin 1s linear infinite;
+            margin-bottom: 20px;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+        
+        .loading-text {
+            color: var(--secondary-color);
+            font-size: 18px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <div class="brand">
+                <a href="/index.html"><i class="fas fa-brain"></i>MentalSpace</a>
+            </div>
+            <nav class="navigation" id="navigation">
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="/index.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li class="nav-item"><a href="/forums.html"><i class="fas fa-comments"></i> Forum</a></li>
+                    <li class="nav-item"><a href="/articles.html"><i class="fas fa-book"></i> Articles</a></li>
+                    <li class="nav-item"><a href="/login.html" class="login-btn"><i class="fas fa-user"></i> Login</a></li>
+                </ul>
+            </nav>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              // Check if user is logged in
+              const userJSON = localStorage.getItem('user');
+              
+              // Reference to navbar elements
+              const navList = document.querySelector('.nav-list');
+              const loginItem = document.querySelector('.nav-item .login-btn')?.parentElement;
+              
+              if (userJSON && loginItem) {
+                // User is logged in, replace login button with username and logout
+                const user = JSON.parse(userJSON);
+                
+                // Remove the login button
+                loginItem.remove();
+                
+                // Create username item
+                const usernameItem = document.createElement('li');
+                usernameItem.className = 'nav-item';
+                usernameItem.innerHTML = `<a href="#"><i class="fas fa-user-circle"></i> ${user.name}</a>`;
+                
+                // Create logout item
+                const logoutItem = document.createElement('li');
+                logoutItem.className = 'nav-item';
+                logoutItem.innerHTML = `<a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>`;
+                
+                // Add the new items to the navbar
+                navList.appendChild(usernameItem);
+                navList.appendChild(logoutItem);
+                
+                // Add logout functionality
+                document.getElementById('logout-btn').addEventListener('click', async function(e) {
+                  e.preventDefault();
+                  
+                  try {
+                    await fetch('/api/logout');
+                    
+                    // Clear user data from localStorage
+                    localStorage.removeItem('user');
+                    
+                    // Redirect to home page
+                    window.location.href = 'index.html';
+                  } catch (error) {
+                    console.error('Error during logout:', error);
+                    alert('Error logging out. Please try again.');
+                  }
+                });
+              }
+            });
+        </script>
+    </header>
+
+    <section class="forum-content">
+        <!-- Search Bar -->
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-bar" id="searchBar" placeholder="Search conversations...">
+        </div>
+
+        <!-- Category Navigation -->
+        <div class="category-nav">
+            <button class="category-btn active" data-category="all"><i class="fas fa-globe"></i> All Topics</button>
+            <button class="category-btn" data-category="professional"><i class="fas fa-user-md"></i> Professional Insights</button>
+            <button class="category-btn" data-category="academic"><i class="fas fa-graduation-cap"></i> Academic Pressures</button>
+            <button class="category-btn" data-category="social"><i class="fas fa-users"></i> Social Life Issues</button>
+            <button class="category-btn" data-category="anxiety"><i class="fas fa-heartbeat"></i> Anxiety & Stress</button>
+            <button class="category-btn" data-category="selfcare"><i class="fas fa-spa"></i> Self-Care</button>
+            <button class="category-btn" data-category="family"><i class="fas fa-home"></i> Family Dynamics</button>
+        </div>
+
+        <div class="post-buttons">
+            <button class="host-conversation-btn"><i class="fas fa-plus-circle"></i> Host a Conversation</button>
+        </div>
+
+        <!-- Firebase Posts Container -->
+        <div id="firebase-posts-container">
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+                <div class="loading-text">Loading conversations...</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- New Conversation Popup -->
+    <div class="popup-overlay" id="conversationPopupOverlay">
+        <div class="popup" id="conversationPopup">
+            <button class="close-btn" id="closePopupBtn">&times;</button>
+            <h2>Start a New Conversation</h2>
+            
+            <div class="formatting-tools">
+                <button class="format-btn" data-format="bold"><i class="fas fa-bold"></i></button>
+                <button class="format-btn" data-format="italic"><i class="fas fa-italic"></i></button>
+                <button class="format-btn" data-format="underline"><i class="fas fa-underline"></i></button>
+                <button class="format-btn" data-format="heading"><i class="fas fa-heading"></i></button>
+                <button class="format-btn" data-format="list"><i class="fas fa-list"></i></button>
+                <button class="format-btn" data-format="quote"><i class="fas fa-quote-right"></i></button>
+            </div>
+            
+            <textarea id="conversationContent" placeholder="Share your thoughts here..."></textarea>
+            
+            <select class="category-select" id="conversationCategory">
+                <option value="" disabled selected>Select a category</option>
+                <option value="academic">Academic Pressures</option>
+                <option value="social">Social Life Issues</option>
+                <option value="anxiety">Anxiety & Stress</option>
+                <option value="selfcare">Self-Care</option>
+                <option value="family">Family Dynamics</option>
+            </select>
+            
+            <input type="text" class="tags-input" id="conversationTags" placeholder="Add tags (comma separated)">
+            
+            <button class="submit-btn" id="submitConversationBtn">Post Conversation</button>
+        </div>
+    </div>
+
+    <!-- Reply Popup -->
+    <div class="popup-overlay" id="replyPopupOverlay">
+        <div class="popup" id="replyPopup">
+            <button class="close-btn" id="closeReplyPopupBtn">&times;</button>
+            <h2>Post a Reply</h2>
+            
+            <div class="formatting-tools">
+                <button class="format-btn" data-format="bold"><i class="fas fa-bold"></i></button>
+                <button class="format-btn" data-format="italic"><i class="fas fa-italic"></i></button>
+                <button class="format-btn" data-format="underline"><i class="fas fa-underline"></i></button>
+                <button class="format-btn" data-format="list"><i class="fas fa-list"></i></button>
+                <button class="format-btn" data-format="quote"><i class="fas fa-quote-right"></i></button>
+            </div>
+            
+            <textarea id="replyContent" placeholder="Write your response here..."></textarea>
+            
+            <button class="submit-btn" id="submitReplyBtn">Post Reply</button>
+        </div>
+    </div>
+
+    <!-- Edit Post Popup -->
+    <div class="popup-overlay" id="editPostPopupOverlay">
+        <div class="popup" id="editPostPopup">
+            <button class="close-btn" id="closeEditPostPopupBtn">&times;</button>
+            <h2>Edit Your Post</h2>
+            
+            <div class="formatting-tools">
+                <button class="format-btn" data-format="bold"><i class="fas fa-bold"></i></button>
+                <button class="format-btn" data-format="italic"><i class="fas fa-italic"></i></button>
+                <button class="format-btn" data-format="underline"><i class="fas fa-underline"></i></button>
+                <button class="format-btn" data-format="heading"><i class="fas fa-heading"></i></button>
+                <button class="format-btn" data-format="list"><i class="fas fa-list"></i></button>
+                <button class="format-btn" data-format="quote"><i class="fas fa-quote-right"></i></button>
+            </div>
+            
+            <textarea id="editPostContent" placeholder="Edit your post..."></textarea>
+            
+            <select class="category-select" id="editPostCategory">
+                <option value="" disabled>Select a category</option>
+                <option value="academic">Academic Pressures</option>
+                <option value="social">Social Life Issues</option>
+                <option value="anxiety">Anxiety & Stress</option>
+                <option value="selfcare">Self-Care</option>
+                <option value="family">Family Dynamics</option>
+            </select>
+            
+            <input type="text" class="tags-input" id="editPostTags" placeholder="Edit tags (comma separated)">
+            
+            <button class="submit-btn" id="submitEditPostBtn">Update Post</button>
+        </div>
+    </div>
+
+    <!-- Edit Comment Popup -->
+    <div class="popup-overlay" id="editCommentPopupOverlay">
+        <div class="popup" id="editCommentPopup">
+            <button class="close-btn" id="closeEditCommentPopupBtn">&times;</button>
+            <h2>Edit Your Comment</h2>
+            
+            <div class="formatting-tools">
+                <button class="format-btn" data-format="bold"><i class="fas fa-bold"></i></button>
+                <button class="format-btn" data-format="italic"><i class="fas fa-italic"></i></button>
+                <button class="format-btn" data-format="underline"><i class="fas fa-underline"></i></button>
+                <button class="format-btn" data-format="list"><i class="fas fa-list"></i></button>
+                <button class="format-btn" data-format="quote"><i class="fas fa-quote-right"></i></button>
+            </div>
+            
+            <textarea id="editCommentContent" placeholder="Edit your comment..."></textarea>
+            
+            <button class="submit-btn" id="submitEditCommentBtn">Update Comment</button>
+        </div>
+    </div>
+
+    <!-- Login Notification -->
+    <div class="notification-overlay" id="notificationOverlay">
+        <div class="notification-popup" id="loginNotification">
+            <h3>Login Required</h3>
+            <p id="notification-message">You need to be logged in to perform this action.</p>
+            <div>
+                <a href="login.html" class="notification-btn">Login</a>
+                <button class="notification-btn secondary" id="cancelLoginBtn">Cancel</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Confirmation Dialog -->
+    <div class="confirm-dialog" id="confirmDialog">
+        <h3>Confirm Deletion</h3>
+        <p id="confirm-message">Are you sure you want to delete this item? This action cannot be undone.</p>
+        <div class="confirm-dialog-buttons">
+            <button class="confirm-btn" id="confirmBtn">Delete</button>
+            <button class="cancel-btn" id="cancelConfirmBtn">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize Firebase
+        const firebaseConfig = {
+            apiKey: "AIzaSyD3o-5boVy0ONh0jh-h9BBwlIv_s24lnfI",
+            authDomain: "mentalspace-7639f.firebaseapp.com",
+            projectId: "mentalspace-7639f",
+            storageBucket: "mentalspace-7639f.appspot.com",
+            messagingSenderId: "426015805993",
+            appId: "1:426015805993:web:a839eea64269b51987c238",
+            measurementId: "G-8JJ7JDHQBP"
+        };
+
+        // Initialize Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        
+        // Enable offline data persistence
+        db.enablePersistence()
+          .catch((err) => {
+            if (err.code == 'failed-precondition') {
+              console.log('Multiple tabs open, persistence can only be enabled in one tab at a time.');
+            } else if (err.code == 'unimplemented') {
+              console.log('The current browser does not support all of the features required to enable persistence');
+            }
+          });
+        
+        // Main execution when DOM is loaded
+        document.addEventListener('DOMContentLoaded', function() {
+            // References to DOM elements
+            const categoryButtons = document.querySelectorAll('.category-btn');
+            const searchBar = document.getElementById('searchBar');
+            const firebasePostsContainer = document.getElementById('firebase-posts-container');
+            
+            // Popup elements
+            const hostConversationBtn = document.querySelector('.host-conversation-btn');
+            const conversationPopupOverlay = document.getElementById('conversationPopupOverlay');
+            const replyPopupOverlay = document.getElementById('replyPopupOverlay');
+            const editPostPopupOverlay = document.getElementById('editPostPopupOverlay');
+            const editCommentPopupOverlay = document.getElementById('editCommentPopupOverlay');
+            const closePopupBtn = document.getElementById('closePopupBtn');
+            const closeReplyPopupBtn = document.getElementById('closeReplyPopupBtn');
+            const closeEditPostPopupBtn = document.getElementById('closeEditPostPopupBtn');
+            const closeEditCommentPopupBtn = document.getElementById('closeEditCommentPopupBtn');
+            const notificationOverlay = document.getElementById('notificationOverlay');
+            const loginNotification = document.getElementById('loginNotification');
+            const cancelLoginBtn = document.getElementById('cancelLoginBtn');
+            const submitReplyBtn = document.getElementById('submitReplyBtn');
+            const submitConversationBtn = document.getElementById('submitConversationBtn');
+            const submitEditPostBtn = document.getElementById('submitEditPostBtn');
+            const submitEditCommentBtn = document.getElementById('submitEditCommentBtn');
+            
+            // Confirmation dialog elements
+            const confirmDialog = document.getElementById('confirmDialog');
+            const confirmBtn = document.getElementById('confirmBtn');
+            const cancelConfirmBtn = document.getElementById('cancelConfirmBtn');
+            
+            // Global variables for tracking
+            let currentReplyPostId = null;
+            let currentEditPostId = null;
+            let currentEditCommentId = null;
+            let currentDeleteTarget = null;
+            let currentDeleteType = null; // 'post' or 'comment'
+            const allPosts = [];
+            const categorySections = [];
+            
+            // Sample posts (Pakistani names)
+            const samplePosts = [
+                // Professional Insights
+                {
+                    id: 'post1',
+                    category: 'professional',
+                    authorName: 'Dr. Asad Khan',
+                    authorId: 'professional_user_1',
+                    isProfessional: true,
+                    createdAt: new Date('2025-02-25'),
+                    content: "Understanding mental health in the context of our cultural pressures is essential for healing. Many of us face expectations from family and society that can contribute to stress and anxiety.\n\nRemember that seeking help is not a sign of weakness but rather a step towards better self-care. Talking about your feelings with a trusted professional can provide relief and new perspectives.",
+                    views: 178,
+                    tags: ['Cultural Context', 'Stigma Reduction', 'Professional Support']
+                },
+                {
+                    id: 'post2',
+                    category: 'professional',
+                    authorName: 'Dr. Fatima Akhtar',
+                    authorId: 'professional_user_2',
+                    isProfessional: true,
+                    createdAt: new Date('2025-02-28'),
+                    content: "Studies show that incorporating mindfulness practices into your daily routine can significantly reduce stress levels. Even just 5-10 minutes of meditation or deep breathing each day can make a difference.\n\nI recommend starting with simple exercises like focused breathing for a few minutes each morning. Consistency is more important than duration when first establishing these practices.",
+                    views: 156,
+                    tags: ['Mindfulness', 'Stress Reduction', 'Daily Practices']
+                },
+                
+                // Academic Pressures
+                {
+                    id: 'post3',
+                    category: 'academic',
+                    authorName: 'Zainab Mahmood',
+                    authorId: 'user_1',
+                    isProfessional: false,
+                    createdAt: new Date('2025-03-01'),
+                    content: "The pressure from my parents to excel academically is becoming overwhelming. I'm in my final year of university and they expect nothing less than top grades, but I'm struggling to keep up with all the coursework.\n\nHow do others handle the expectations from family while maintaining their own mental health? I feel guilty whenever I take time for myself instead of studying.",
+                    views: 123,
+                    tags: ['Family Pressure', 'Academic Stress', 'Balance']
+                },
+                {
+                    id: 'post4',
+                    category: 'academic',
+                    authorName: 'Ali Hassan',
+                    authorId: 'user_2',
+                    isProfessional: false,
+                    createdAt: new Date('2025-03-05'),
+                    content: "I've been using the Pomodoro technique for the past month and it's been a game-changer for my study habits. Working intensely for 25 minutes and then taking a 5-minute break helps me stay focused and prevents burnout.\n\nI've also started breaking down major assignments into smaller tasks, which makes them feel more manageable. Has anyone else found effective strategies for academic productivity without sacrificing mental wellbeing?",
+                    views: 98,
+                    tags: ['Study Techniques', 'Productivity', 'Time Management']
+                },
+                
+                // Social Life Issues
+                {
+                    id: 'post5',
+                    category: 'social',
+                    authorName: 'Imran Shahid',
+                    authorId: 'user_3',
+                    isProfessional: false,
+                    createdAt: new Date('2025-03-02'),
+                    content: "I've always struggled with social anxiety, but it's been getting worse since starting university. I find it difficult to speak up in class or approach new people, and I'm worried this will affect my future career prospects.\n\nDoes anyone have advice on overcoming social anxiety in academic settings? I want to be more confident but don't know where to start.",
+                    views: 145,
+                    tags: ['Social Anxiety', 'University Life', 'Confidence']
+                },
+                {
+                    id: 'post6',
+                    category: 'social',
+                    authorName: 'Ayesha Malik',
+                    authorId: 'user_4',
+                    isProfessional: false,
+                    createdAt: new Date('2025-03-07'),
+                    content: "Finding a balance between maintaining cultural values and fitting in with peers has been challenging. I sometimes feel caught between two worlds - wanting to honor my family's traditions while also connecting with friends who have different backgrounds.\n\nI'd love to hear from others who have navigated this balance successfully. How do you stay true to yourself while building meaningful social connections?",
+                    views: 112,
+                    tags: ['Cultural Identity', 'Friendship', 'Belonging']
+                },
+                
+                // Anxiety & Stress
+                {
+                    id: 'post7',
+                    category: 'anxiety',
+                    authorName: 'Tariq Ahmed',
+                    authorId: 'user_5',
+                    isProfessional: false,
+                    createdAt: new Date('2025-03-08'),
+                    content: "I've been experiencing panic attacks before important exams, and it's affecting my performance. My heart races, my hands shake, and I can't think clearly - even when I know the material well.\n\nHas anyone found effective techniques for managing this kind of acute anxiety? I've tried deep breathing but it doesn't seem to be enough in those moments.",
+                    views: 167,
+                    tags: ['Panic Attacks', 'Exam Anxiety', 'Coping Strategies']
+                },
+                {
+                    id: 'post8',
+                    category: 'anxiety',
+                    authorName: 'Sara Qureshi',
+                    authorId: 'user_6',
+                    isProfessional: false,
+                    createdAt: new Date('2025-03-10'),
+                    content: "The constant stream of news about global issues has been triggering my anxiety lately. Between climate change, political tensions, and other crises, I find myself worrying about things beyond my control.\n\nI want to stay informed but not at the cost of my mental health. How do others manage to balance awareness with wellbeing?",
+                    views: 134,
+                    tags: ['News Anxiety', 'Global Issues', 'Information Balance']
+                },
+                
+                // Self-Care
+                {
+                    id: 'post9',
+                    category: 'selfcare',
+                    authorName: 'Mariam Rizvi',
+                    authorId: 'user_7',
+                    isProfessional: false,
+                    createdAt: new Date('2025-03-03'),
+                    content: "I've been implementing a morning routine that includes journaling, light exercise, and a healthy breakfast. It's made a significant difference in my overall mood and energy levels.\n\nI'd like to hear what self-care practices others find most beneficial, especially those that don't require a lot of time or money. What small habits have made the biggest impact for you?",
+                    views: 121,
+                    tags: ['Morning Routine', 'Daily Habits', 'Wellness']
+                },
+                {
+                    id: 'post10',
+                    category: 'selfcare',
+                    authorName: 'Hamza Siddiqui',
+                    authorId: 'user_8',
+                    isProfessional: false,
+                    createdAt: new Date('2025-03-09'),
+                    content: "I've noticed that I often neglect self-care during busy periods, which inevitably leads to burnout. I'm trying to establish non-negotiable self-care practices that I stick to regardless of my workload.\n\nCurrently, I'm committed to getting 7 hours of sleep each night and taking at least 30 minutes of outdoor time daily. What are your non-negotiable self-care practices?",
+                    views: 95,
+                    tags: ['Burnout Prevention', 'Boundaries', 'Consistent Self-Care']
+                },
+                
+                // Family Dynamics
+                {
+                    id: 'post11',
+                    category: 'family',
+                    authorName: 'Nadia Jabbar',
+                    authorId: 'user_9',
+                    isProfessional: false,
+                    createdAt: new Date('2025-03-04'),
+                    content: "Navigating conversations about mental health with traditional parents has been challenging. They tend to view psychological issues as something that should be kept private or overcome through willpower alone.\n\nHow have others approached this topic with family members who may not fully understand or accept the importance of mental health care?",
+                    views: 138,
+                    tags: ['Family Communication', 'Traditional Values', 'Mental Health Education']
+                }
+            ];
+
+            // Sample comments for posts
+            const sampleComments = {
+                'post1': [
+                    {
+                        id: 'comment1-post1',
+                        authorName: 'Fatima Syed',
+                        authorId: 'comment_user_1',
+                        postId: 'post1',
+                        content: "Thank you for addressing this important topic. The cultural stigma around mental health in our community is slowly changing, but we still have a long way to go.",
+                        createdAt: new Date('2025-02-26')
+                    },
+                    {
+                        id: 'comment2-post1',
+                        authorName: 'Omar Khan',
+                        authorId: 'comment_user_2',
+                        postId: 'post1',
+                        content: "I've found that framing therapy as a form of personal development rather than 'treatment' makes it more acceptable to discuss with family members. Have you seen this approach work with your patients?",
+                        createdAt: new Date('2025-02-27')
+                    }
+                ],
+                'post2': [
+                    {
+                        id: 'comment1-post2',
+                        authorName: 'Bilal Ahmed',
+                        authorId: 'comment_user_3',
+                        postId: 'post2',
+                        content: "I've been using the Insight Timer app for guided meditations and it's been very helpful. Do you have any specific resources you recommend for beginners?",
+                        createdAt: new Date('2025-03-01')
+                    }
+                ],
+                'post3': [
+                    {
+                        id: 'comment1-post3',
+                        authorName: 'Mehwish Alam',
+                        authorId: 'comment_user_4',
+                        postId: 'post3',
+                        content: "I relate to this so much. What's helped me is setting clear boundaries with my parents about study time and personal time. It was difficult at first, but has improved our relationship.",
+                        createdAt: new Date('2025-03-02')
+                    },
+                    {
+                        id: 'comment2-post3',
+                        authorName: 'Dr. Fatima Akhtar',
+                        authorId: 'professional_user_2',
+                        postId: 'post3',
+                        content: "Consider having an honest conversation with your parents about the counterproductive nature of excessive pressure. Sometimes parents don't realize how their expectations affect their children's mental health.",
+                        createdAt: new Date('2025-03-03')
+                    }
+                ],
+                'post4': [
+                    {
+                        id: 'comment1-post4',
+                        authorName: 'Saad Khan',
+                        authorId: 'comment_user_5',
+                        postId: 'post4',
+                        content: "The Pomodoro technique has been a game-changer for me too! I also started using a digital planner to visualize my assignments and deadlines, which helps reduce the mental load.",
+                        createdAt: new Date('2025-03-06')
+                    }
+                ],
+                'post5': [
+                    {
+                        id: 'comment1-post5',
+                        authorName: 'Rabia Nasir',
+                        authorId: 'comment_user_6',
+                        postId: 'post5',
+                        content: "I've found that joining smaller study groups or clubs related to my interests has helped with my social anxiety. It's easier to connect with people when you have a shared purpose.",
+                        createdAt: new Date('2025-03-03')
+                    },
+                    {
+                        id: 'comment2-post5',
+                        authorName: 'Dr. Asad Khan',
+                        authorId: 'professional_user_1',
+                        postId: 'post5',
+                        content: "Gradual exposure to social situations, starting with less intimidating ones, can help build confidence over time. Consider setting small, achievable social goals for yourself each week.",
+                        createdAt: new Date('2025-03-04')
+                    }
+                ],
+                'post7': [
+                    {
+                        id: 'comment1-post7',
+                        authorName: 'Ahmed Raza',
+                        authorId: 'comment_user_8',
+                        postId: 'post7',
+                        content: "I've found that arriving at the exam venue early and doing a 'brain dump' of key information on a scrap paper helps reduce my anxiety. It's like telling my brain it doesn't need to hold everything at once.",
+                        createdAt: new Date('2025-03-09')
+                    }
+                ],
+                'post9': [
+                    {
+                        id: 'comment1-post9',
+                        authorName: 'Hina Zahid',
+                        authorId: 'comment_user_9',
+                        postId: 'post9',
+                        content: "I've found that even 5 minutes of stretching in the morning makes a difference. Another simple practice is keeping a gratitude journal by my bed and writing down three things I'm thankful for each night.",
+                        createdAt: new Date('2025-03-04')
+                    }
+                ],
+                'post11': [
+                    {
+                        id: 'comment1-post11',
+                        authorName: 'Farhan Malik',
+                        authorId: 'comment_user_10',
+                        postId: 'post11',
+                        content: "I found that sharing articles or videos from respected sources has helped my parents understand mental health better. Sometimes hearing it from an authority figure makes a difference.",
+                        createdAt: new Date('2025-03-05')
+                    },
+                    {
+                        id: 'comment2-post11',
+                        authorName: 'Sana Akram',
+                        authorId: 'comment_user_11',
+                        postId: 'post11',
+                        content: "I started by talking about friends who benefited from therapy rather than directly discussing my own mental health. It opened the door to more personal conversations later.",
+                        createdAt: new Date('2025-03-06')
+                    }
+                ]
+            };
+            
+            // Load all comments from Firebase
+            loadAllCommentsFromFirebase();
+            
+            // Load posts from Firebase or sample posts
+            loadPosts();
+            
+            // Event Listeners
+            
+            // Host conversation button
+            hostConversationBtn.addEventListener('click', function() {
+                if (!isUserLoggedIn()) {
+                    showLoginNotification('start a conversation');
+                    return;
+                }
+                
+                openPopup('conversationPopupOverlay');
+            });
+            
+            // Close popup buttons
+            closePopupBtn.addEventListener('click', function() {
+                closePopup('conversationPopupOverlay');
+            });
+            
+            closeReplyPopupBtn.addEventListener('click', function() {
+                closePopup('replyPopupOverlay');
+            });
+            
+            closeEditPostPopupBtn.addEventListener('click', function() {
+                closePopup('editPostPopupOverlay');
+            });
+            
+            closeEditCommentPopupBtn.addEventListener('click', function() {
+                closePopup('editCommentPopupOverlay');
+            });
+            
+            // Cancel login notification
+            cancelLoginBtn.addEventListener('click', function() {
+                notificationOverlay.style.display = 'none';
+                loginNotification.style.display = 'none';
+            });
+            
+            // Confirmation dialog
+            cancelConfirmBtn.addEventListener('click', function() {
+                confirmDialog.classList.remove('active');
+            });
+            
+            confirmBtn.addEventListener('click', function() {
+                if (currentDeleteType === 'post') {
+                    deletePost(currentDeleteTarget);
+                } else if (currentDeleteType === 'comment') {
+                    deleteComment(currentDeleteTarget.postId, currentDeleteTarget.commentId);
+                }
+                confirmDialog.classList.remove('active');
+            });
+            
+            // Submit conversation button
+            submitConversationBtn.addEventListener('click', function() {
+                const content = document.getElementById('conversationContent').value.trim();
+                const category = document.getElementById('conversationCategory').value;
+                const tagsInput = document.getElementById('conversationTags').value.trim();
+                const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()) : [];
+                
+                if (!content || !category) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                
+                if (!isUserLoggedIn()) {
+                    showLoginNotification('post a conversation');
+                    return;
+                }
+                
+                createNewPost(content, category, tags);
+                
+                // Clear form
+                document.getElementById('conversationContent').value = '';
+                document.getElementById('conversationCategory').selectedIndex = 0;
+                document.getElementById('conversationTags').value = '';
+                
+                // Close popup
+                closePopup('conversationPopupOverlay');
+            });
+            
+            // Submit reply button
+            submitReplyBtn.addEventListener('click', function() {
+                const content = document.getElementById('replyContent').value.trim();
+                
+                if (!content) {
+                    alert('Please enter your reply');
+                    return;
+                }
+                
+                if (!isUserLoggedIn()) {
+                    showLoginNotification('post a reply');
+                    return;
+                }
+                
+                if (currentReplyPostId) {
+                    addComment(currentReplyPostId, content);
+                    document.getElementById('replyContent').value = '';
+                    closePopup('replyPopupOverlay');
+                }
+            });
+            
+            // Submit edit post button
+            submitEditPostBtn.addEventListener('click', function() {
+                const content = document.getElementById('editPostContent').value.trim();
+                const category = document.getElementById('editPostCategory').value;
+                const tagsInput = document.getElementById('editPostTags').value.trim();
+                const tags = tagsInput ? tagsInput.split(',').map(tag => tag.trim()) : [];
+                
+                if (!content || !category) {
+                    alert('Please fill in all required fields');
+                    return;
+                }
+                
+                if (currentEditPostId) {
+                    updatePost(currentEditPostId, content, category, tags);
+                    closePopup('editPostPopupOverlay');
+                }
+            });
+            
+            // Submit edit comment button
+            submitEditCommentBtn.addEventListener('click', function() {
+                const content = document.getElementById('editCommentContent').value.trim();
+                
+                if (!content) {
+                    alert('Please enter your comment');
+                    return;
+                }
+                
+                if (currentEditCommentId) {
+                    updateComment(currentEditCommentId.postId, currentEditCommentId.commentId, content);
+                    closePopup('editCommentPopupOverlay');
+                }
+            });
+            
+            // Category filter buttons
+            categoryButtons.forEach(button => {
+                button.addEventListener('click', function() {
+                    // Remove active class from all buttons
+                    categoryButtons.forEach(btn => btn.classList.remove('active'));
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Get category value
+                    const category = this.getAttribute('data-category');
+                    
+                    // Filter posts
+                    filterPosts(category);
+                });
+            });
+            
+            // Search bar
+            searchBar.addEventListener('input', function() {
+                const searchTerm = this.value.toLowerCase().trim();
+                
+                if (searchTerm.length > 2) {
+                    searchPosts(searchTerm);
+                } else if (searchTerm.length === 0) {
+                    // Reset to current filter
+                    const activeCategory = document.querySelector('.category-btn.active').getAttribute('data-category');
+                    filterPosts(activeCategory);
+                }
+            });
+            
+            // Formatting buttons
+            document.querySelectorAll('.format-btn').forEach(button => {
+                button.addEventListener('click', function() {
+                    const formatType = this.getAttribute('data-format');
+                    const textarea = this.closest('.popup').querySelector('textarea');
+                    formatText(textarea, formatType);
+                });
+            });
+            
+            // Functions
+            
+            // Check if user is logged in
+            function isUserLoggedIn() {
+                return localStorage.getItem('user') !== null;
+            }
+            
+            // Get current user ID
+            function getCurrentUserId() {
+                const userJson = localStorage.getItem('user');
+                if (userJson) {
+                    const user = JSON.parse(userJson);
+                    return user.uid;
+                }
+                return null;
+            }
+            
+            // Load all comments from Firebase
+            function loadAllCommentsFromFirebase() {
+                // Get the current user ID
+                const currentUserId = getCurrentUserId();
+                
+                // Fetch all comments
+                db.collection('comments').get()
+                    .then((snapshot) => {
+                        // Store comments by post ID
+                        const commentsByPost = {};
+                        
+                        snapshot.forEach(doc => {
+                            const commentData = doc.data();
+                            const postId = commentData.postId;
+                            
+                            if (!commentsByPost[postId]) {
+                                commentsByPost[postId] = [];
+                            }
+                            
+                            // Determine if current user is the author
+                            const isAuthor = currentUserId && commentData.authorId === currentUserId;
+                            
+                            // Add comment to the array
+                            commentsByPost[postId].push({
+                                id: doc.id,
+                                ...commentData,
+                                createdAt: commentData.createdAt ? commentData.createdAt.toDate() : new Date(),
+                                isAuthor: isAuthor
+                            });
+                        });
+                        
+                        // Now store these comments in localStorage for quick access
+                        for (const postId in commentsByPost) {
+                            localStorage.setItem(`comments-${postId}`, JSON.stringify(commentsByPost[postId]));
+                        }
+                        
+                        console.log("All comments loaded from Firebase and stored locally");
+                    })
+                    .catch(error => {
+                        console.error("Error loading comments from Firebase:", error);
+                    });
+            }
+            
+            // Show login notification
+            function showLoginNotification(action) {
+                document.getElementById('notification-message').textContent = `You need to be logged in to ${action}.`;
+                notificationOverlay.style.display = 'block';
+                loginNotification.style.display = 'block';
+            }
+            
+            // Open popup
+            function openPopup(id) {
+                const overlay = document.getElementById(id);
+                overlay.classList.add('active');
+                document.body.style.overflow = 'hidden';
+            }
+            
+            // Close popup
+            function closePopup(id) {
+                const overlay = document.getElementById(id);
+                overlay.classList.remove('active');
+                document.body.style.overflow = 'auto';
+            }
+            
+            // Show confirm dialog
+            function showConfirmDialog(message, type, target) {
+                document.getElementById('confirm-message').textContent = message;
+                currentDeleteType = type;
+                currentDeleteTarget = target;
+                confirmDialog.classList.add('active');
+            }
+            
+            // Load posts
+            function loadPosts() {
+                // Clear container
+                firebasePostsContainer.innerHTML = '';
+                
+                // Setup category sections
+                const categories = [
+                    { id: 'professional', name: 'Professional Insights' },
+                    { id: 'academic', name: 'Academic Pressures' },
+                    { id: 'social', name: 'Social Life Issues' },
+                    { id: 'anxiety', name: 'Anxiety & Stress' },
+                    { id: 'selfcare', name: 'Self-Care' },
+                    { id: 'family', name: 'Family Dynamics' }
+                ];
+                
+                // Create category section containers
+                categories.forEach(category => {
+                    const section = document.createElement('div');
+                    section.className = 'category-section';
+                    section.id = `${category.id}-section`;
+                    section.innerHTML = `
+                        <h2 class="section-heading">${category.name}</h2>
+                        <div class="posts" id="${category.id}-posts"></div>
+                    `;
+                    
+                    firebasePostsContainer.appendChild(section);
+                    categorySections.push(section);
+                });
+                
+                // First try to fetch Firebase posts
+                fetchFirebasePosts();
+            }
+            
+            // Fetch posts from Firebase
+            async function fetchFirebasePosts() {
+                try {
+                    // Try to fetch posts from Firebase
+                    try {
+                        // Get posts from Firestore collection
+                        const postsRef = db.collection('posts');
+                        const snapshot = await postsRef.get();
+                        
+                        if (!snapshot.empty) {
+                            // We have posts from Firebase, load them
+                            snapshot.forEach(doc => {
+                                const postData = doc.data();
+                                createPostElement({
+                                    id: doc.id,
+                                    ...postData,
+                                    createdAt: postData.createdAt ? postData.createdAt.toDate() : new Date()
+                                });
+                            });
+                            
+                            // Add sample posts as well (for development)
+                            samplePosts.forEach(post => {
+                                createPostElement(post);
+                            });
+                            
+                            // Setup event listeners for posts
+                            setupPostEventListeners();
+                        } else {
+                            // No posts in Firebase, use sample posts
+                            samplePosts.forEach(post => {
+                                createPostElement(post);
+                            });
+                            
+                            // Setup event listeners for posts
+                            setupPostEventListeners();
+                        }
+                    } catch (firebaseError) {
+                        console.log("Couldn't fetch from Firebase", firebaseError);
+                        
+                        // Use sample posts as fallback
+                        samplePosts.forEach(post => {
+                            createPostElement(post);
+                        });
+                        
+                        // Setup event listeners for posts
+                        setupPostEventListeners();
+                    }
+                } catch (error) {
+                    console.error("Error loading posts:", error);
+                    
+                    // Use sample posts as fallback
+                    samplePosts.forEach(post => {
+                        createPostElement(post);
+                    });
+                    
+                    // Setup event listeners for posts
+                    setupPostEventListeners();
+                }
+            }
+            
+            // Create post element and add to DOM
+            function createPostElement(post) {
+                const postDiv = document.createElement('div');
+                postDiv.className = `post ${post.isProfessional ? 'professional' : ''}`;
+                postDiv.setAttribute('data-id', post.id);
+                postDiv.setAttribute('data-category', post.category);
+                postDiv.setAttribute('data-author-id', post.authorId || '');
+                
+                // Format date
+                const date = post.createdAt instanceof Date 
+                    ? post.createdAt.toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    })
+                    : new Date(post.createdAt).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'long',
+                        day: 'numeric'
+                    });
+                
+                // Format content with paragraphs
+                const contentParagraphs = post.content.split('\n\n').map(p => `<p>${p}</p>`).join('');
+                
+                // Create tags HTML
+                const tagsHTML = post.tags && post.tags.length > 0 
+                    ? post.tags.map(tag => `<span class="tag">${tag}</span>`).join('')
+                    : '';
+                
+                // Check if current user is the author
+                const currentUserId = getCurrentUserId();
+                const isAuthor = currentUserId && post.authorId === currentUserId;
+                
+                // Action buttons based on user role
+                const actionButtonsHTML = isAuthor ? `
+                    <div class="post-actions-right">
+                        <button class="edit-btn" data-post-id="${post.id}"><i class="fas fa-edit"></i> Edit</button>
+                        <button class="delete-btn" data-post-id="${post.id}"><i class="fas fa-trash-alt"></i> Delete</button>
+                    </div>
+                ` : '';
+                
+                // HTML template
+                postDiv.innerHTML = `
+                    <div class="post-header">
+                        <div class="user-details">
+                            <div class="user-avatar">${post.authorName ? post.authorName[0].toUpperCase() : 'A'}</div>
+                            <div>
+                                <div>${post.authorName || 'Anonymous'} ${post.isProfessional ? '<span class="professional-badge">Professional</span>' : ''}</div>
+                                <div class="post-timestamp">Published on: ${date}</div>
+                            </div>
+                        </div>
+                        <div class="post-stats">
+                            <div class="stat"><i class="fas fa-comment"></i> Comments</div>
+                            <div class="stat"><i class="fas fa-eye"></i> ${post.views || 0}</div>
+                        </div>
+                    </div>
+                    <div class="post-body">
+                        ${contentParagraphs}
+                    </div>
+                    <div class="post-tags">
+                        ${tagsHTML}
+                    </div>
+                    <div class="post-actions">
+                        <div class="post-actions-left">
+                            <button class="reply-btn" data-post-id="${post.id}"><i class="fas fa-reply"></i> Reply</button>
+                            <button class="toggle-comments-btn" data-post-id="${post.id}">
+                                <i class="fas fa-comments"></i> View Comments
+                            </button>
+                        </div>
+                        ${actionButtonsHTML}
+                    </div>
+                    <div class="comments-container" id="comments-${post.id}">
+                        <div class="comments-list"></div>
+                        <div class="comment-form">
+                            <input type="text" class="comment-input" placeholder="Add a comment...">
+                            <button class="comment-submit" data-post-id="${post.id}">Post</button>
+                        </div>
+                    </div>
+                `;
+                
+                // Add to the appropriate category section
+                const categoryContainer = document.getElementById(`${post.category}-posts`);
+                if (categoryContainer) {
+                    categoryContainer.appendChild(postDiv);
+                }
+                
+                // Add post to allPosts array for filtering
+                allPosts.push(post);
+                
+                // If this is a sample post, add sample comments
+                if (sampleComments[post.id]) {
+                    // Store sample comments in localStorage
+                    localStorage.setItem(`comments-${post.id}`, JSON.stringify(sampleComments[post.id]));
+                }
+            }
+            
+            // Set up event listeners for posts
+            function setupPostEventListeners() {
+                // Reply buttons
+                document.querySelectorAll('.reply-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const postId = this.getAttribute('data-post-id');
+                        
+                        if (!isUserLoggedIn()) {
+                            showLoginNotification('reply to this post');
+                            return;
+                        }
+                        
+                        currentReplyPostId = postId;
+                        openPopup('replyPopupOverlay');
+                    });
+                });
+                
+                // Toggle comments buttons
+                document.querySelectorAll('.toggle-comments-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const postId = this.getAttribute('data-post-id');
+                        const commentsContainer = document.getElementById(`comments-${postId}`);
+                        
+                        if (commentsContainer.style.display === 'block') {
+                            // Hide comments
+                            commentsContainer.style.display = 'none';
+                            this.innerHTML = `<i class="fas fa-comments"></i> View Comments`;
+                        } else {
+                            // Show comments
+                            commentsContainer.style.display = 'block';
+                            this.innerHTML = `<i class="fas fa-comments"></i> Hide Comments`;
+                            
+                            // Load comments
+                            loadComments(postId);
+                        }
+                    });
+                });
+                
+                // Edit post buttons
+                document.querySelectorAll('.edit-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const postId = this.getAttribute('data-post-id');
+                        editPost(postId);
+                    });
+                });
+                
+                // Delete post buttons
+                document.querySelectorAll('.delete-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const postId = this.getAttribute('data-post-id');
+                        showConfirmDialog('Are you sure you want to delete this post? This action cannot be undone.', 'post', postId);
+                    });
+                });
+                
+                // Comment submit buttons
+                document.querySelectorAll('.comment-submit').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const postId = this.getAttribute('data-post-id');
+                        const input = this.previousElementSibling;
+                        const content = input.value.trim();
+                        
+                        if (!content) {
+                            return;
+                        }
+                        
+                        if (!isUserLoggedIn()) {
+                            showLoginNotification('comment on this post');
+                            return;
+                        }
+                        
+                        addComment(postId, content);
+                        input.value = '';
+                    });
+                });
+                
+                // Submit comment on Enter key
+                document.querySelectorAll('.comment-input').forEach(input => {
+                    input.addEventListener('keypress', function(e) {
+                        if (e.key === 'Enter') {
+                            const postId = this.nextElementSibling.getAttribute('data-post-id');
+                            const content = this.value.trim();
+                            
+                            if (!content) {
+                                return;
+                            }
+                            
+                            if (!isUserLoggedIn()) {
+                                showLoginNotification('comment on this post');
+                                return;
+                            }
+                            
+                            addComment(postId, content);
+                            this.value = '';
+                        }
+                    });
+                });
+            }
+            
+            // Load comments for a post
+            function loadComments(postId) {
+                const commentsContainer = document.getElementById(`comments-${postId}`);
+                const commentsList = commentsContainer.querySelector('.comments-list');
+                
+                // Clear comments list
+                commentsList.innerHTML = '';
+                
+                // Try to fetch comments from Firebase
+                db.collection('comments')
+                    .where('postId', '==', postId)
+                    .orderBy('createdAt', 'asc')
+                    .get()
+                    .then((snapshot) => {
+                        if (snapshot.empty) {
+                            // Check localStorage as backup
+                            const localCommentsJson = localStorage.getItem(`comments-${postId}`);
+                            if (localCommentsJson) {
+                                const localComments = JSON.parse(localCommentsJson);
+                                if (localComments.length > 0) {
+                                    localComments.forEach(comment => {
+                                        createCommentElement(comment, commentsList);
+                                    });
+                                    setupCommentActionButtons();
+                                    return;
+                                }
+                            }
+                            
+                            commentsList.innerHTML = '<div class="no-comments">No comments yet. Be the first to comment!</div>';
+                            return;
+                        }
+                        
+                        snapshot.forEach(doc => {
+                            const comment = {
+                                id: doc.id,
+                                ...doc.data(),
+                                createdAt: doc.data().createdAt ? doc.data().createdAt.toDate() : new Date()
+                            };
+                            
+                            createCommentElement(comment, commentsList);
+                        });
+                        
+                        // Setup comment action buttons
+                        setupCommentActionButtons();
+                    })
+                    .catch(error => {
+                        console.log("Error getting comments: ", error);
+                        
+                        // Fall back to localStorage
+                        const userCommentsJson = localStorage.getItem(`comments-${postId}`);
+                        if (userCommentsJson) {
+                            const userComments = JSON.parse(userCommentsJson);
+                            
+                            if (userComments.length === 0) {
+                                commentsList.innerHTML = '<div class="no-comments">No comments yet. Be the first to comment!</div>';
+                                return;
+                            }
+                            
+                            // Create comment elements
+                            userComments.forEach(comment => {
+                                createCommentElement(comment, commentsList);
+                            });
+                            
+                            // Setup comment action buttons
+                            setupCommentActionButtons();
+                        } else {
+                            commentsList.innerHTML = '<div class="no-comments">No comments yet. Be the first to comment!</div>';
+                        }
+                    });
+            }
+            
+            // Create comment element
+            function createCommentElement(comment, container) {
+                const commentDiv = document.createElement('div');
+                commentDiv.className = 'comment';
+                commentDiv.setAttribute('data-id', comment.id);
+                commentDiv.setAttribute('data-author-id', comment.authorId || '');
+                commentDiv.setAttribute('data-post-id', comment.postId);
+                
+                // Format date
+                const date = new Date(comment.createdAt).toLocaleString();
+                
+                // Check if current user is the author - either from the current check OR from the stored property
+                const currentUserId = getCurrentUserId();
+                const isAuthor = (currentUserId && comment.authorId === currentUserId) || comment.isAuthor;
+                
+                // Action buttons based on user role
+                const actionButtonsHTML = isAuthor ? `
+                    <div class="comment-actions">
+                        <button class="comment-edit-btn" data-comment-id="${comment.id}" data-post-id="${comment.postId}">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button class="comment-delete-btn" data-comment-id="${comment.id}" data-post-id="${comment.postId}">
+                            <i class="fas fa-trash-alt"></i>
+                        </button>
+                    </div>
+                ` : '';
+                
+                commentDiv.innerHTML = `
+                    <div class="comment-header">
+                        <span class="comment-author">${comment.authorName || 'Anonymous'}</span>
+                        <span class="comment-date">${date}</span>
+                    </div>
+                    <div class="comment-content">${comment.content}</div>
+                    ${actionButtonsHTML}
+                `;
+                
+                container.appendChild(commentDiv);
+            }
+            
+            // Setup comment action buttons
+            function setupCommentActionButtons() {
+                // Edit comment buttons
+                document.querySelectorAll('.comment-edit-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const commentId = this.getAttribute('data-comment-id');
+                        const postId = this.getAttribute('data-post-id');
+                        editComment(postId, commentId);
+                    });
+                });
+                
+                // Delete comment buttons
+                document.querySelectorAll('.comment-delete-btn').forEach(button => {
+                    button.addEventListener('click', function() {
+                        const commentId = this.getAttribute('data-comment-id');
+                        const postId = this.getAttribute('data-post-id');
+                        showConfirmDialog('Are you sure you want to delete this comment?', 'comment', { postId, commentId });
+                    });
+                });
+            }
+            
+            // Add a comment to a post
+            function addComment(postId, content) {
+                // Get user data
+                const userJson = localStorage.getItem('user');
+                const user = JSON.parse(userJson);
+                
+                // Create comment object
+                const comment = {
+                    authorName: user.name || 'Anonymous',
+                    authorId: user.uid,
+                    postId: postId,
+                    content: content,
+                    createdAt: new Date(),
+                    isAuthor: true
+                };
+                
+                // Try to add to Firebase if possible
+                db.collection('comments').add({
+                    postId: postId,
+                    authorId: user.uid,
+                    authorName: user.name || 'Anonymous',
+                    content: content,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then((docRef) => {
+                    // Comment added successfully
+                    comment.id = docRef.id;
+                    
+                    // Update UI
+                    const commentsContainer = document.getElementById(`comments-${postId}`);
+                    const commentsList = commentsContainer.querySelector('.comments-list');
+                    
+                    // Remove "no comments" message if it exists
+                    const noCommentsMsg = commentsList.querySelector('.no-comments');
+                    if (noCommentsMsg) {
+                        noCommentsMsg.remove();
+                    }
+                    
+                    // Add the new comment
+                    createCommentElement(comment, commentsList);
+                    
+                    // Setup comment action buttons
+                    setupCommentActionButtons();
+                    
+                    // Update localStorage comments
+                    updateLocalStorageComments(postId, comment, 'add');
+                })
+                .catch((error) => {
+                    console.error("Error adding comment: ", error);
+                    
+                    // Fall back to localStorage
+                    comment.id = 'local-' + Date.now();
+                    
+                    // Update UI
+                    const commentsContainer = document.getElementById(`comments-${postId}`);
+                    const commentsList = commentsContainer.querySelector('.comments-list');
+                    
+                    // Remove "no comments" message if it exists
+                    const noCommentsMsg = commentsList.querySelector('.no-comments');
+                    if (noCommentsMsg) {
+                        noCommentsMsg.remove();
+                    }
+                    
+                    // Add the new comment
+                    createCommentElement(comment, commentsList);
+                    
+                    // Setup comment action buttons
+                    setupCommentActionButtons();
+                    
+                    // Update localStorage comments
+                    updateLocalStorageComments(postId, comment, 'add');
+                });
+            }
+            
+            // Edit a comment
+            function editComment(postId, commentId) {
+                // Get comment data from localStorage or DOM
+                const commentsJson = localStorage.getItem(`comments-${postId}`);
+                let comment = null;
+                
+                if (commentsJson) {
+                    const comments = JSON.parse(commentsJson);
+                    comment = comments.find(c => c.id === commentId);
+                }
+                
+                if (!comment) {
+                    // Try to get comment from DOM
+                    const commentElement = document.querySelector(`.comment[data-id="${commentId}"]`);
+                    if (commentElement) {
+                        const contentElement = commentElement.querySelector('.comment-content');
+                        if (contentElement) {
+                            comment = {
+                                id: commentId,
+                                postId: postId,
+                                content: contentElement.innerHTML
+                            };
+                        }
+                    }
+                }
+                
+                if (comment) {
+                    // Set current edit comment ID
+                    currentEditCommentId = { postId, commentId };
+                    
+                    // Set content in edit popup
+                    document.getElementById('editCommentContent').value = comment.content;
+                    
+                    // Open edit popup
+                    openPopup('editCommentPopupOverlay');
+                } else {
+                    alert('Comment not found');
+                }
+            }
+            
+            // Update a comment
+            function updateComment(postId, commentId, content) {
+                // Try to update in Firebase
+                db.collection('comments').doc(commentId).update({
+                    content: content
+                })
+                .then(() => {
+                    console.log("Comment successfully updated in Firebase");
+                    
+                    // Update UI
+                    const commentElement = document.querySelector(`.comment[data-id="${commentId}"]`);
+                    if (commentElement) {
+                        const contentElement = commentElement.querySelector('.comment-content');
+                        if (contentElement) {
+                            contentElement.innerHTML = content;
+                        }
+                    }
+                    
+                    // Update localStorage comments
+                    updateLocalStorageComments(postId, { id: commentId, content }, 'update');
+                })
+                .catch((error) => {
+                    console.error("Error updating comment: ", error);
+                    
+                    // Update localStorage and UI anyway
+                    const commentElement = document.querySelector(`.comment[data-id="${commentId}"]`);
+                    if (commentElement) {
+                        const contentElement = commentElement.querySelector('.comment-content');
+                        if (contentElement) {
+                            contentElement.innerHTML = content;
+                        }
+                    }
+                    
+                    // Update localStorage comments
+                    updateLocalStorageComments(postId, { id: commentId, content }, 'update');
+                });
+            }
+            
+            // Delete a comment
+            function deleteComment(postId, commentId) {
+                // First try to delete from Firebase
+                db.collection('comments').doc(commentId).delete()
+                    .then(() => {
+                        console.log("Comment successfully deleted from Firebase");
+                        
+                        // Update localStorage
+                        updateLocalStorageComments(postId, { id: commentId }, 'delete');
+                        
+                        // Update UI
+                        const commentElement = document.querySelector(`.comment[data-id="${commentId}"]`);
+                        if (commentElement) {
+                            commentElement.remove();
+                        }
+                        
+                        // Check if there are no more comments
+                        const commentsContainer = document.getElementById(`comments-${postId}`);
+                        const commentsList = commentsContainer.querySelector('.comments-list');
+                        if (commentsList.children.length === 0) {
+                            commentsList.innerHTML = '<div class="no-comments">No comments yet. Be the first to comment!</div>';
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error deleting comment: ", error);
+                        
+                        // Update localStorage anyway
+                        updateLocalStorageComments(postId, { id: commentId }, 'delete');
+                        
+                        // Update UI
+                        const commentElement = document.querySelector(`.comment[data-id="${commentId}"]`);
+                        if (commentElement) {
+                            commentElement.remove();
+                        }
+                        
+                        // Check if there are no more comments
+                        const commentsContainer = document.getElementById(`comments-${postId}`);
+                        const commentsList = commentsContainer.querySelector('.comments-list');
+                        if (commentsList.children.length === 0) {
+                            commentsList.innerHTML = '<div class="no-comments">No comments yet. Be the first to comment!</div>';
+                        }
+                    });
+            }
+            
+            // Update comments in localStorage
+            function updateLocalStorageComments(postId, comment, action) {
+                const commentsJson = localStorage.getItem(`comments-${postId}`);
+                let comments = [];
+                
+                if (commentsJson) {
+                    comments = JSON.parse(commentsJson);
+                }
+                
+                if (action === 'add') {
+                    comments.push(comment);
+                } else if (action === 'update') {
+                    const index = comments.findIndex(c => c.id === comment.id);
+                    if (index !== -1) {
+                        comments[index].content = comment.content;
+                    }
+                } else if (action === 'delete') {
+                    comments = comments.filter(c => c.id !== comment.id);
+                }
+                
+                localStorage.setItem(`comments-${postId}`, JSON.stringify(comments));
+            }
+            
+            // Edit a post
+            function editPost(postId) {
+                // Find the post element
+                const postElement = document.querySelector(`.post[data-id="${postId}"]`);
+                if (!postElement) {
+                    alert('Post not found');
+                    return;
+                }
+                
+                // Get post data
+                const postBody = postElement.querySelector('.post-body').innerHTML;
+                const postCategory = postElement.getAttribute('data-category');
+                const postTags = Array.from(postElement.querySelectorAll('.tag')).map(tag => tag.textContent);
+                
+                // Set edit post data
+                document.getElementById('editPostContent').value = postBody
+                    .replace(/<p>/g, '')
+                    .replace(/<\/p>/g, '\n\n')
+                    .trim();
+                
+                // Set category
+                const categorySelect = document.getElementById('editPostCategory');
+                for (let i = 0; i < categorySelect.options.length; i++) {
+                    if (categorySelect.options[i].value === postCategory) {
+                        categorySelect.selectedIndex = i;
+                        break;
+                    }
+                }
+                
+                // Set tags
+                document.getElementById('editPostTags').value = postTags.join(', ');
+                
+                // Set current edit post ID
+                currentEditPostId = postId;
+                
+                // Open edit popup
+                openPopup('editPostPopupOverlay');
+            }
+            
+            // Update a post
+            function updatePost(postId, content, category, tags) {
+                // Try to update in Firebase
+                db.collection('posts').doc(postId).update({
+                    content: content,
+                    category: category,
+                    tags: tags,
+                    updatedAt: firebase.firestore.FieldValue.serverTimestamp()
+                })
+                .then(() => {
+                    console.log("Post successfully updated in Firebase");
+                    
+                    // Reload posts to reflect changes
+                    loadPosts();
+                })
+                .catch((error) => {
+                    console.error("Error updating post: ", error);
+                    alert('Error updating post. Please try again.');
+                });
+            }
+            
+            // Delete a post
+            function deletePost(postId) {
+                // First try to delete from Firebase
+                db.collection('posts').doc(postId).delete()
+                    .then(() => {
+                        console.log("Post successfully deleted from Firebase");
+                        
+                        // Remove post from UI
+                        const postElement = document.querySelector(`.post[data-id="${postId}"]`);
+                        if (postElement) {
+                            postElement.remove();
+                        }
+                        
+                        // Also delete all comments for this post
+                        db.collection('comments')
+                            .where('postId', '==', postId)
+                            .get()
+                            .then((snapshot) => {
+                                snapshot.forEach(doc => {
+                                    doc.ref.delete();
+                                });
+                            })
+                            .catch((error) => {
+                                console.error("Error deleting comments: ", error);
+                            });
+                        
+                        // Remove comments from localStorage
+                        localStorage.removeItem(`comments-${postId}`);
+                    })
+                    .catch((error) => {
+                        console.error("Error deleting post: ", error);
+                        
+                        // Try to remove post from UI anyway
+                        const postElement = document.querySelector(`.post[data-id="${postId}"]`);
+                        if (postElement) {
+                            postElement.remove();
+                        }
+                    });
+            }
+            
+            // Create a new post
+            function createNewPost(content, category, tags) {
+                // Get user data
+                const userJson = localStorage.getItem('user');
+                const user = JSON.parse(userJson);
+                
+                // Create post data
+                const postData = {
+                    content: content,
+                    category: category,
+                    tags: tags,
+                    authorId: user.uid,
+                    authorName: user.name || 'Anonymous',
+                    isProfessional: user.isProfessional || false,
+                    createdAt: firebase.firestore.FieldValue.serverTimestamp(),
+                    views: 0
+                };
+                
+                // Try to add to Firebase
+                db.collection('posts').add(postData)
+                    .then((docRef) => {
+                        console.log("Post successfully added to Firebase");
+                        
+                        // Create post element
+                        const post = {
+                            id: docRef.id,
+                            ...postData,
+                            createdAt: new Date()
+                        };
+                        
+                        createPostElement(post);
+                        setupPostEventListeners();
+                        
+                        // Scroll to new post
+                        const postElement = document.querySelector(`.post[data-id="${docRef.id}"]`);
+                        if (postElement) {
+                            postElement.scrollIntoView({ behavior: 'smooth' });
+                        }
+                    })
+                    .catch((error) => {
+                        console.error("Error adding post: ", error);
+                        alert('Error adding post. Please try again.');
+                    });
+            }
+            
+            // Filter posts by category
+            function filterPosts(category) {
+                // Show or hide sections based on category
+                categorySections.forEach(section => {
+                    section.style.display = 'none';
+                });
+                
+                if (category === 'all') {
+                    // Show all sections that have posts
+                    categorySections.forEach(section => {
+                        const categoryId = section.id.replace('-section', '');
+                        const postsContainer = document.getElementById(`${categoryId}-posts`);
+                        
+                        if (postsContainer && postsContainer.children.length > 0) {
+                            section.style.display = 'block';
+                        }
+                    });
+                } else if (category === 'professional') {
+                    // Show professional posts across all categories
+                    document.querySelectorAll('.post').forEach(post => {
+                        const isProfessional = post.classList.contains('professional');
+                        post.style.display = isProfessional ? 'block' : 'none';
+                    });
+                    
+                    // Only show sections that have visible posts
+                    categorySections.forEach(section => {
+                        const categoryId = section.id.replace('-section', '');
+                        const postsContainer = document.getElementById(`${categoryId}-posts`);
+                        const visiblePosts = postsContainer.querySelectorAll('.post[style="display: block;"]').length;
+                        
+                        section.style.display = visiblePosts > 0 ? 'block' : 'none';
+                    });
+                } else {
+                    // Show only selected category
+                    const section = document.getElementById(`${category}-section`);
+                    if (section) {
+                        section.style.display = 'block';
+                    }
+                }
+                
+                // Check if there are any visible sections
+                const hasVisibleSections = document.querySelector('.category-section[style="display: block;"]');
+                
+                if (!hasVisibleSections) {
+                    // Show a message indicating no posts in this category
+                    let noPostsMessage = document.getElementById('no-posts-message');
+                    if (!noPostsMessage) {
+                        noPostsMessage = document.createElement('div');
+                        noPostsMessage.id = 'no-posts-message';
+                        noPostsMessage.className = 'no-results-message';
+                        noPostsMessage.innerHTML = '<p>No conversations in this category yet. Start a new conversation!</p>';
+                        firebasePostsContainer.appendChild(noPostsMessage);
+                    } else {
+                        noPostsMessage.style.display = 'block';
+                    }
+                } else {
+                    // Hide no posts message if it exists
+                    const noPostsMessage = document.getElementById('no-posts-message');
+                    if (noPostsMessage) {
+                        noPostsMessage.style.display = 'none';
+                    }
+                }
+            }
+            
+            // Search posts
+            function searchPosts(term) {
+                // Show all sections first
+                categorySections.forEach(section => {
+                    section.style.display = 'block';
+                });
+                
+                // Filter posts
+                let foundAny = false;
+                document.querySelectorAll('.post').forEach(post => {
+                    const postContent = post.querySelector('.post-body').textContent.toLowerCase();
+                    const authorName = post.querySelector('.user-details').textContent.toLowerCase();
+                    const tags = Array.from(post.querySelectorAll('.tag')).map(tag => tag.textContent.toLowerCase());
+                    
+                    const isMatch = 
+                        postContent.includes(term) || 
+                        authorName.includes(term) || 
+                        tags.some(tag => tag.includes(term));
+                    
+                    post.style.display = isMatch ? 'block' : 'none';
+                    
+                    if (isMatch) {
+                        foundAny = true;
+                    }
+                });
+                
+                // Only show sections that have visible posts
+                categorySections.forEach(section => {
+                    const categoryId = section.id.replace('-section', '');
+                    const postsContainer = document.getElementById(`${categoryId}-posts`);
+                    if (postsContainer) {
+                        const visiblePosts = postsContainer.querySelectorAll('.post[style="display: block;"]').length;
+                        section.style.display = visiblePosts > 0 ? 'block' : 'none';
+                    }
+                });
+                
+                // Show message if no posts found
+                if (!foundAny) {
+                    let noResultsMessage = document.getElementById('no-results-message');
+                    if (!noResultsMessage) {
+                        noResultsMessage = document.createElement('div');
+                        noResultsMessage.id = 'no-results-message';
+                        noResultsMessage.className = 'no-results-message';
+                        noResultsMessage.innerHTML = '<p>No conversations match your search criteria.</p>';
+                        firebasePostsContainer.appendChild(noResultsMessage);
+                    } else {
+                        noResultsMessage.style.display = 'block';
+                    }
+                } else {
+                    const noResultsMessage = document.getElementById('no-results-message');
+                    if (noResultsMessage) {
+                        noResultsMessage.style.display = 'none';
+                    }
+                }
+            }
+            
+            // Format text in textarea
+            function formatText(textarea, format) {
+                const start = textarea.selectionStart;
+                const end = textarea.selectionEnd;
+                const selectedText = textarea.value.substring(start, end);
+                let replacement = '';
+                
+                switch (format) {
+                    case 'bold':
+                        replacement = `**${selectedText}**`;
+                        break;
+                    case 'italic':
+                        replacement = `*${selectedText}*`;
+                        break;
+                    case 'underline':
+                        replacement = `_${selectedText}_`;
+                        break;
+                    case 'heading':
+                        replacement = `## ${selectedText}`;
+                        break;
+                    case 'list':
+                        replacement = `\n- ${selectedText}`;
+                        break;
+                    case 'quote':
+                        replacement = `> ${selectedText}`;
+                        break;
+                }
+                
+                textarea.value = textarea.value.substring(0, start) + replacement + textarea.value.substring(end);
+                textarea.focus();
+                
+                // Set cursor position after the inserted text
+                const newPosition = start + replacement.length;
+                textarea.setSelectionRange(newPosition, newPosition);
+            }
+        });
+    </script>
+</body>
+</html>

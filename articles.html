@@ -1,0 +1,1258 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Articles - MentalSpace</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.6.10/firebase-firestore-compat.js"></script>
+    <style>
+        /* Global Styles */
+        :root {
+            --primary-color: #121212;
+            --secondary-color: gold;
+            --accent-color: rgba(255, 215, 0, 0.1);
+            --text-color: white;
+            --card-bg: rgba(255, 255, 255, 0.08);
+            --card-hover: rgba(255, 255, 255, 0.12);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--primary-color);
+            color: var(--text-color);
+            line-height: 1.6;
+        }
+
+        /* Scrollbar Styling */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: #1a1a1a;
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: var(--secondary-color);
+            border-radius: 10px;
+        }
+
+        /* Navbar */
+        .navbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 30px;
+            width: 100%;
+            position: fixed;
+            top: 0;
+            background: rgba(0, 0, 0, 0.85);
+            z-index: 1000;
+            backdrop-filter: blur(5px);
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .brand a {
+            font-size: 28px;
+            font-weight: bold;
+            color: var(--text-color);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+
+        .brand a i {
+            margin-right: 10px;
+            color: var(--secondary-color);
+        }
+
+        .nav-list {
+            list-style: none;
+            display: flex;
+            gap: 30px;
+        }
+
+        .nav-item a {
+            color: var(--text-color);
+            text-decoration: none;
+            font-size: 18px;
+            transition: color 0.3s ease, transform 0.3s ease;
+            position: relative;
+            padding: 5px 0;
+        }
+
+        .nav-item a:hover {
+            color: var(--secondary-color);
+            transform: translateY(-2px);
+        }
+
+        .nav-item a::after {
+            content: '';
+            position: absolute;
+            width: 0;
+            height: 2px;
+            bottom: 0;
+            left: 0;
+            background-color: var(--secondary-color);
+            transition: width 0.3s ease;
+        }
+
+        .nav-item a:hover::after {
+            width: 100%;
+        }
+
+        /* Article Content */
+        .article-content {
+            padding: 120px 50px 60px;
+            min-height: 100vh;
+            background: linear-gradient(to bottom, #121212, #1a1a1a);
+        }
+
+        /* Title */
+        .page-title {
+            text-align: center;
+            color: var(--secondary-color);
+            font-size: 36px;
+            margin-bottom: 50px;
+            letter-spacing: 1px;
+        }
+
+        /* Filter controls */
+        .filter-controls {
+            display: flex;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+            gap: 15px;
+        }
+
+        .filter-btn {
+            padding: 10px 20px;
+            background: transparent;
+            border: 2px solid var(--secondary-color);
+            color: var(--text-color);
+            border-radius: 30px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 15px;
+            font-weight: 500;
+        }
+
+        .filter-btn.active {
+            background: var(--secondary-color);
+            color: black;
+        }
+
+        .filter-btn:hover {
+            background: var(--secondary-color);
+            color: black;
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(255, 215, 0, 0.3);
+        }
+
+        /* Search bar */
+        .search-container {
+            max-width: 600px;
+            margin: 0 auto 40px;
+            position: relative;
+        }
+
+        .search-bar {
+            width: 100%;
+            padding: 15px 20px 15px 50px;
+            border-radius: 30px;
+            border: 2px solid var(--secondary-color);
+            background: rgba(0, 0, 0, 0.3);
+            color: var(--text-color);
+            font-size: 16px;
+            outline: none;
+        }
+
+        .search-bar::placeholder {
+            color: rgba(255, 255, 255, 0.6);
+        }
+
+        .search-icon {
+            position: absolute;
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--secondary-color);
+            font-size: 18px;
+        }
+
+        /* Articles grid */
+        .articles-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .article-card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            overflow: hidden;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+            transition: all 0.3s ease;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+
+        .article-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 15px 30px rgba(0, 0, 0, 0.4);
+            background: var(--card-hover);
+        }
+
+        .article-image {
+            height: 200px;
+            overflow: hidden;
+            position: relative;
+            background-color: #222;
+        }
+
+        .article-image img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .article-card:hover .article-image img {
+            transform: scale(1.1);
+        }
+
+        .article-category {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--secondary-color);
+            color: black;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            z-index: 2;
+        }
+
+        .article-details {
+            padding: 20px;
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .article-title {
+            font-size: 20px;
+            color: var(--text-color);
+            margin-bottom: 10px;
+            font-weight: 600;
+            transition: color 0.3s ease;
+        }
+
+        .article-card:hover .article-title {
+            color: var(--secondary-color);
+        }
+
+        .article-excerpt {
+            color: rgba(255, 255, 255, 0.7);
+            font-size: 14px;
+            margin-bottom: 15px;
+            flex-grow: 1;
+        }
+
+        .article-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: rgba(255, 255, 255, 0.5);
+            font-size: 12px;
+            margin-top: auto;
+        }
+
+        .article-author {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .author-avatar {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 14px;
+        }
+
+        .article-date {
+            color: rgba(255, 255, 255, 0.5);
+        }
+
+        .read-more {
+            display: inline-block;
+            margin-top: 15px;
+            color: var(--secondary-color);
+            font-weight: 500;
+            text-decoration: none;
+            font-size: 14px;
+            transition: all 0.3s ease;
+        }
+
+        .read-more:hover {
+            transform: translateX(5px);
+        }
+
+        /* Article Modal */
+        .article-modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(5px);
+            z-index: 2000;
+            display: none;
+            overflow-y: auto;
+        }
+
+        .article-modal {
+            background: var(--primary-color);
+            max-width: 800px;
+            margin: 80px auto;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .article-modal-header {
+            padding: 0;
+        }
+
+        .modal-featured-image {
+            width: 100%;
+            height: 300px;
+            object-fit: cover;
+        }
+
+        .modal-close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: rgba(0, 0, 0, 0.5);
+            color: white;
+            border: none;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 20px;
+            transition: all 0.3s ease;
+            z-index: 2100;
+        }
+
+        .modal-close-btn:hover {
+            background: var(--secondary-color);
+            color: black;
+            transform: rotate(90deg);
+        }
+
+        .article-modal-body {
+            padding: 30px;
+        }
+
+        .modal-title {
+            font-size: 28px;
+            color: var(--secondary-color);
+            margin-bottom: 10px;
+        }
+
+        .modal-meta {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 14px;
+        }
+
+        .modal-author {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .modal-author-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: var(--secondary-color);
+            color: black;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            font-size: 16px;
+        }
+
+        .modal-date-category {
+            display: flex;
+            gap: 15px;
+        }
+
+        .modal-category {
+            background: var(--secondary-color);
+            color: black;
+            padding: 3px 10px;
+            border-radius: 15px;
+            font-size: 12px;
+            font-weight: 600;
+        }
+
+        .modal-content {
+            line-height: 1.8;
+            font-size: 16px;
+            color: rgba(255, 255, 255, 0.9);
+        }
+
+        .modal-content p {
+            margin-bottom: 20px;
+        }
+
+        .modal-content h2, .modal-content h3 {
+            color: var(--secondary-color);
+            margin: 30px 0 15px;
+        }
+
+        .modal-content ul, .modal-content ol {
+            margin: 0 0 20px 20px;
+        }
+
+        .modal-content a {
+            color: var(--secondary-color);
+            text-decoration: none;
+        }
+
+        .modal-content a:hover {
+            text-decoration: underline;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            border-radius: 8px;
+            margin: 20px 0;
+        }
+
+        .modal-content blockquote {
+            border-left: 3px solid var(--secondary-color);
+            padding-left: 20px;
+            margin: 20px 0;
+            font-style: italic;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        /* Features Articles Section */
+        .featured-articles {
+            margin-bottom: 60px;
+        }
+
+        .featured-articles-heading {
+            text-align: center;
+            margin-bottom: 30px;
+            font-size: 24px;
+            color: var(--secondary-color);
+            position: relative;
+            padding-bottom: 10px;
+        }
+
+        .featured-articles-heading::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 3px;
+            background-color: var(--secondary-color);
+        }
+
+        .featured-articles-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .featured-article-main {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            height: 400px;
+        }
+
+        .featured-article-secondary {
+            position: relative;
+            border-radius: 15px;
+            overflow: hidden;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+            height: 400px;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .featured-article-secondary .featured-article-item {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .featured-article-secondary .featured-article-item:first-child {
+            margin-bottom: 20px;
+        }
+
+        .featured-article-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            transition: transform 0.5s ease;
+        }
+
+        .featured-article-main:hover .featured-article-img,
+        .featured-article-item:hover .featured-article-img {
+            transform: scale(1.05);
+        }
+
+        .featured-article-content {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            padding: 30px;
+            background: linear-gradient(to top, rgba(0, 0, 0, 0.9), transparent);
+            color: white;
+        }
+
+        .featured-article-content h3 {
+            font-size: 24px;
+            margin-bottom: 10px;
+            color: var(--secondary-color);
+        }
+
+        .featured-article-content p {
+            font-size: 14px;
+            margin-bottom: 15px;
+            color: rgba(255, 255, 255, 0.8);
+        }
+
+        .featured-article-item .featured-article-content h3 {
+            font-size: 18px;
+        }
+
+        .featured-article-item .featured-article-content p {
+            font-size: 12px;
+        }
+
+        .featured-article-category {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--secondary-color);
+            color: black;
+            padding: 5px 12px;
+            border-radius: 20px;
+            font-size: 12px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            z-index: 2;
+        }
+
+        /* Loading */
+        .loading-container {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 200px;
+        }
+
+        .loading-spinner {
+            width: 50px;
+            height: 50px;
+            border: 4px solid rgba(255, 215, 0, 0.1);
+            border-radius: 50%;
+            border-top: 4px solid var(--secondary-color);
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        /* No results */
+        .no-results {
+            text-align: center;
+            padding: 40px;
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            font-size: 18px;
+            color: rgba(255, 255, 255, 0.7);
+            margin: 0 auto;
+            max-width: 600px;
+        }
+
+        /* Related articles */
+        .related-articles {
+            margin-top: 40px;
+        }
+
+        .related-articles h3 {
+            font-size: 20px;
+            color: var(--secondary-color);
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .related-articles-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 20px;
+        }
+
+        .related-article-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 10px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .related-article-card:hover {
+            transform: translateY(-5px);
+            background: rgba(0, 0, 0, 0.3);
+        }
+
+        .related-article-img {
+            width: 100%;
+            height: 120px;
+            object-fit: cover;
+        }
+
+        .related-article-info {
+            padding: 15px;
+        }
+
+        .related-article-info h4 {
+            font-size: 16px;
+            margin-bottom: 10px;
+            color: white;
+        }
+
+        .related-article-info a {
+            color: var(--secondary-color);
+            font-size: 12px;
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 991px) {
+            .featured-articles-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .featured-article-secondary {
+                height: auto;
+                display: grid;
+                grid-template-columns: 1fr 1fr;
+                gap: 20px;
+            }
+            
+            .featured-article-secondary .featured-article-item {
+                height: 200px;
+                margin-bottom: 0 !important;
+            }
+            
+            .related-articles-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 768px) {
+            .article-content {
+                padding: 100px 20px 40px;
+            }
+            
+            .page-title {
+                font-size: 28px;
+            }
+            
+            .filter-controls {
+                overflow-x: auto;
+                padding-bottom: 10px;
+                justify-content: flex-start;
+                -webkit-overflow-scrolling: touch;
+            }
+            
+            .filter-btn {
+                flex-shrink: 0;
+            }
+            
+            .featured-article-main,
+            .featured-article-secondary .featured-article-item {
+                height: 250px;
+            }
+            
+            .featured-article-secondary {
+                grid-template-columns: 1fr;
+            }
+            
+            .article-modal {
+                margin: 60px 20px;
+            }
+            
+            .modal-title {
+                font-size: 22px;
+            }
+            
+            .related-articles-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .nav-list {
+                gap: 15px;
+            }
+            
+            .brand a {
+                font-size: 22px;
+            }
+            
+            .filter-btn {
+                font-size: 13px;
+                padding: 8px 15px;
+            }
+            
+            .articles-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .featured-article-content h3 {
+                font-size: 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="navbar">
+            <div class="brand">
+                <a href="/index.html"><i class="fas fa-brain"></i>MentalSpace</a>
+            </div>
+            <nav>
+                <ul class="nav-list">
+                    <li class="nav-item"><a href="/index.html"><i class="fas fa-home"></i> Home</a></li>
+                    <li class="nav-item"><a href="/forums.html"><i class="fas fa-comments"></i> Forum</a></li>
+                    <li class="nav-item"><a href="/articles.html"><i class="fas fa-book"></i> Articles</a></li>
+                    <li class="nav-item"><a href="/login.html" class="login-btn"><i class="fas fa-user"></i> Login</a></li>
+                </ul>
+            </nav>
+        </div>
+        <script>
+            document.addEventListener('DOMContentLoaded', function() {
+              // Check if user is logged in
+              const userJSON = localStorage.getItem('user');
+              
+              // Reference to navbar elements
+              const navList = document.querySelector('.nav-list');
+              const loginItem = document.querySelector('.nav-item .login-btn')?.parentElement;
+              
+              if (userJSON && loginItem) {
+                // User is logged in, replace login button with username and logout
+                const user = JSON.parse(userJSON);
+                
+                // Remove the login button
+                loginItem.remove();
+                
+                // Create username item
+                const usernameItem = document.createElement('li');
+                usernameItem.className = 'nav-item';
+                usernameItem.innerHTML = `<a href="#"><i class="fas fa-user-circle"></i> ${user.name}</a>`;
+                
+                // Create logout item
+                const logoutItem = document.createElement('li');
+                logoutItem.className = 'nav-item';
+                logoutItem.innerHTML = `<a href="#" id="logout-btn"><i class="fas fa-sign-out-alt"></i> Logout</a>`;
+                
+                // Add the new items to the navbar
+                navList.appendChild(usernameItem);
+                navList.appendChild(logoutItem);
+                
+                // Add logout functionality
+                document.getElementById('logout-btn').addEventListener('click', async function(e) {
+                  e.preventDefault();
+                  
+                  try {
+                    await fetch('/api/logout');
+                    
+                    // Clear user data from localStorage
+                    localStorage.removeItem('user');
+                    
+                    // Redirect to home page
+                    window.location.href = 'index.html';
+                  } catch (error) {
+                    console.error('Error during logout:', error);
+                    alert('Error logging out. Please try again.');
+                  }
+                });
+              }
+            });
+        </script>
+    </header>
+
+    <section class="article-content">
+        <h1 class="page-title">Mental Health Articles</h1>
+
+        <!-- Featured Articles -->
+        <div class="featured-articles">
+            <h2 class="featured-articles-heading">Featured Articles</h2>
+            <div class="featured-articles-grid">
+                <div class="featured-article-main" data-id="article1">
+                    <div class="featured-article-category">Anxiety</div>
+                    <img src="https://images.pexels.com/photos/1758144/pexels-photo-1758144.jpeg" alt="Understanding Anxiety" class="featured-article-img">
+                    <div class="featured-article-content">
+                        <h3>Understanding Anxiety and Stress in College</h3>
+                        <p>A comprehensive guide to recognizing and managing anxiety symptoms during your academic journey.</p>
+                        <a href="#" class="read-more">Read Article <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                </div>
+                <div class="featured-article-secondary">
+                    <div class="featured-article-item" data-id="article2">
+                        <div class="featured-article-category">Academic</div>
+                        <img src="https://images.pexels.com/photos/1438072/pexels-photo-1438072.jpeg" alt="Balancing Academic Life" class="featured-article-img">
+                        <div class="featured-article-content">
+                            <h3>Balancing Academic and Social Life</h3>
+                            <p>Strategies for maintaining a healthy balance between studies and social connections.</p>
+                            <a href="#" class="read-more">Read Article <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                    <div class="featured-article-item" data-id="article3">
+                        <div class="featured-article-category">Mindfulness</div>
+                        <img src="https://images.pexels.com/photos/3927387/pexels-photo-3927387.jpeg" alt="Mindfulness Techniques" class="featured-article-img">
+                        <div class="featured-article-content">
+                            <h3>Mindfulness Techniques for Academic Success</h3>
+                            <p>How mindfulness practices can improve focus and reduce test anxiety.</p>
+                            <a href="#" class="read-more">Read Article <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Search Bar -->
+        <div class="search-container">
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" class="search-bar" id="searchBar" placeholder="Search articles...">
+        </div>
+
+        <!-- Category Filter -->
+        <div class="filter-controls">
+            <button class="filter-btn active" data-category="all">All Articles</button>
+            <button class="filter-btn" data-category="anxiety">Anxiety & Stress</button>
+            <button class="filter-btn" data-category="academic">Academic Life</button>
+            <button class="filter-btn" data-category="mindfulness">Mindfulness</button>
+            <button class="filter-btn" data-category="resilience">Resilience</button>
+            <button class="filter-btn" data-category="digital-wellness">Digital Wellness</button>
+            <button class="filter-btn" data-category="cultural-awareness">Cultural Awareness</button>
+        </div>
+
+        <!-- Articles Grid -->
+        <div class="articles-grid" id="articlesGrid">
+            <div class="loading-container">
+                <div class="loading-spinner"></div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Article Modal -->
+    <div class="article-modal-overlay" id="articleModal">
+        <div class="article-modal">
+            <button class="modal-close-btn" id="closeModalBtn"><i class="fas fa-times"></i></button>
+            <div class="article-modal-header">
+                <img src="" alt="" class="modal-featured-image" id="modalImage">
+            </div>
+            <div class="article-modal-body">
+                <h2 class="modal-title" id="modalTitle"></h2>
+                <div class="modal-meta">
+                    <div class="modal-author">
+                        <div class="modal-author-avatar" id="modalAuthorAvatar"></div>
+                        <span id="modalAuthor"></span>
+                    </div>
+                    <div class="modal-date-category">
+                        <span id="modalDate"></span>
+                        <span class="modal-category" id="modalCategory"></span>
+                    </div>
+                </div>
+                <div class="modal-content" id="modalContent"></div>
+
+                <!-- Related Articles -->
+                <div class="related-articles">
+                    <h3>Related Articles</h3>
+                    <div class="related-articles-grid" id="relatedArticles">
+                        <!-- Related articles will be loaded here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="articles.js"></script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // References to DOM elements
+            const articlesGrid = document.getElementById('articlesGrid');
+            const searchBar = document.getElementById('searchBar');
+            const filterBtns = document.querySelectorAll('.filter-btn');
+            const articleModal = document.getElementById('articleModal');
+            const closeModalBtn = document.getElementById('closeModalBtn');
+            const modalImage = document.getElementById('modalImage');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalAuthor = document.getElementById('modalAuthor');
+            const modalAuthorAvatar = document.getElementById('modalAuthorAvatar');
+            const modalDate = document.getElementById('modalDate');
+            const modalCategory = document.getElementById('modalCategory');
+            const modalContent = document.getElementById('modalContent');
+            const relatedArticles = document.getElementById('relatedArticles');
+            const featuredArticles = document.querySelectorAll('.featured-article-main, .featured-article-item');
+            
+            let allArticles = [];
+            let filteredArticles = [];
+            
+            // Initialize articles
+            initializeArticles();
+            
+            // Initialize event listeners
+            initializeEventListeners();
+            
+            // Functions
+            function initializeArticles() {
+                try {
+                    // Get all articles
+                    allArticles = getArticles();
+                    
+                    // Set filtered articles to all articles initially
+                    filteredArticles = [...allArticles];
+                    
+                    // Render articles
+                    renderArticles(filteredArticles);
+                    
+                    console.log('Articles initialized successfully');
+                } catch (error) {
+                    console.error('Error initializing articles:', error);
+                    articlesGrid.innerHTML = `<div class="no-results">Error loading articles. Please try again later.</div>`;
+                }
+            }
+            
+            function initializeEventListeners() {
+                // Filter buttons
+                filterBtns.forEach(btn => {
+                    btn.addEventListener('click', function() {
+                        // Remove active class from all buttons
+                        filterBtns.forEach(b => b.classList.remove('active'));
+                        
+                        // Add active class to clicked button
+                        this.classList.add('active');
+                        
+                        // Get category
+                        const category = this.getAttribute('data-category');
+                        
+                        // Filter articles
+                        filterArticlesByCategory(category);
+                    });
+                });
+                
+                // Search bar
+                searchBar.addEventListener('input', function() {
+                    const searchTerm = this.value.toLowerCase().trim();
+                    searchArticles(searchTerm);
+                });
+                
+                // Close modal button
+                closeModalBtn.addEventListener('click', function() {
+                    closeArticleModal();
+                });
+                
+                // Featured articles
+                featuredArticles.forEach(article => {
+                    article.addEventListener('click', function(e) {
+                        if (e.target.tagName !== 'A') {
+                            const articleId = this.getAttribute('data-id');
+                            openArticleModal(articleId);
+                        }
+                    });
+                });
+                
+                // Escape key to close modal
+                document.addEventListener('keydown', function(e) {
+                    if (e.key === 'Escape' && articleModal.style.display === 'block') {
+                        closeArticleModal();
+                    }
+                });
+            }
+            
+            function renderArticles(articles) {
+                // Clear articles grid
+                articlesGrid.innerHTML = '';
+                
+                if (articles.length === 0) {
+                    articlesGrid.innerHTML = `<div class="no-results">No articles found. Try a different search or category.</div>`;
+                    return;
+                }
+                
+                // Create article cards
+                articles.forEach(article => {
+                    const articleCard = createArticleCard(article);
+                    articlesGrid.appendChild(articleCard);
+                });
+                
+                // Add event listeners to read more buttons
+                document.querySelectorAll('.article-card').forEach(card => {
+                    card.addEventListener('click', function(e) {
+                        if (e.target.tagName !== 'A') {
+                            const articleId = this.getAttribute('data-id');
+                            openArticleModal(articleId);
+                        }
+                    });
+                });
+            }
+            
+            function createArticleCard(article) {
+                const articleCard = document.createElement('div');
+                articleCard.className = 'article-card';
+                articleCard.setAttribute('data-id', article.id);
+                
+                // Format date
+                const date = new Date(article.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'short',
+                    day: 'numeric'
+                });
+                
+                // First letter of author name for avatar
+                const authorInitial = article.authorAvatar || article.author.charAt(0);
+                
+                // Create card content
+                articleCard.innerHTML = `
+                    <div class="article-image">
+                        <img src="${article.imageUrl}" alt="${article.title}" onload="this.style.opacity=1">
+                        <div class="article-category">${formatCategory(article.category)}</div>
+                    </div>
+                    <div class="article-details">
+                        <h3 class="article-title">${article.title}</h3>
+                        <p class="article-excerpt">${article.excerpt}</p>
+                        <div class="article-meta">
+                            <div class="article-author">
+                                <div class="author-avatar">${authorInitial}</div>
+                                <span>${article.author}</span>
+                            </div>
+                            <div class="article-date">${date}</div>
+                        </div>
+                        <a href="#" class="read-more">Read more <i class="fas fa-arrow-right"></i></a>
+                    </div>
+                `;
+                
+                return articleCard;
+            }
+            
+            function filterArticlesByCategory(category) {
+                try {
+                    if (category === 'all') {
+                        filteredArticles = [...allArticles];
+                    } else {
+                        filteredArticles = getArticlesByCategory(category);
+                    }
+                    
+                    // Reset search bar
+                    searchBar.value = '';
+                    
+                    // Render filtered articles
+                    renderArticles(filteredArticles);
+                } catch (error) {
+                    console.error('Error filtering articles:', error);
+                    articlesGrid.innerHTML = `<div class="no-results">Error filtering articles. Please try again.</div>`;
+                }
+            }
+            
+            function searchArticles(searchTerm) {
+                if (!searchTerm) {
+                    // If search term is empty, reset to current category
+                    const activeCategory = document.querySelector('.filter-btn.active').getAttribute('data-category');
+                    filterArticlesByCategory(activeCategory);
+                    return;
+                }
+                
+                // Get current category filter
+                const activeCategory = document.querySelector('.filter-btn.active').getAttribute('data-category');
+                
+                // Get articles for current category
+                let categoryArticles = activeCategory === 'all' ? allArticles : getArticlesByCategory(activeCategory);
+                
+                // Filter by search term
+                const searchResults = categoryArticles.filter(article => {
+                    return (
+                        article.title.toLowerCase().includes(searchTerm) ||
+                        article.excerpt.toLowerCase().includes(searchTerm) ||
+                        article.content.toLowerCase().includes(searchTerm) ||
+                        article.author.toLowerCase().includes(searchTerm) ||
+                        article.category.toLowerCase().includes(searchTerm)
+                    );
+                });
+                
+                // Update filtered articles
+                filteredArticles = searchResults;
+                
+                // Render search results
+                renderArticles(searchResults);
+            }
+            
+            function openArticleModal(articleId) {
+                // Get article
+                const article = getArticleById(articleId);
+                
+                if (!article) {
+                    console.error('Article not found:', articleId);
+                    return;
+                }
+                
+                // Format date
+                const date = new Date(article.createdAt).toLocaleDateString('en-US', {
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric'
+                });
+                
+                // First letter of author name for avatar
+                const authorInitial = article.authorAvatar || article.author.charAt(0);
+                
+                // Update modal content
+                modalImage.src = article.imageUrl;
+                modalImage.alt = article.title;
+                modalTitle.textContent = article.title;
+                modalAuthor.textContent = article.author;
+                modalAuthorAvatar.textContent = authorInitial;
+                modalDate.textContent = date;
+                modalCategory.textContent = formatCategory(article.category);
+                modalContent.innerHTML = article.content;
+                
+                // Get related articles
+                const related = getRelatedArticles(article);
+                
+                // Clear related articles
+                relatedArticles.innerHTML = '';
+                
+                // Create related article cards
+                related.forEach(relatedArticle => {
+                    const relatedCard = document.createElement('div');
+                    relatedCard.className = 'related-article-card';
+                    relatedCard.setAttribute('data-id', relatedArticle.id);
+                    
+                    relatedCard.innerHTML = `
+                        <img src="${relatedArticle.imageUrl}" alt="${relatedArticle.title}" class="related-article-img">
+                        <div class="related-article-info">
+                            <h4>${relatedArticle.title}</h4>
+                            <a href="#" class="read-more">Read Article <i class="fas fa-arrow-right"></i></a>
+                        </div>
+                    `;
+                    
+                    relatedArticles.appendChild(relatedCard);
+                });
+                
+                // Add event listeners to related article cards
+                document.querySelectorAll('.related-article-card').forEach(card => {
+                    card.addEventListener('click', function(e) {
+                        if (e.target.tagName !== 'A') {
+                            const relatedId = this.getAttribute('data-id');
+                            
+                            // Close current modal
+                            closeArticleModal();
+                            
+                            // Open new modal for related article
+                            // Use setTimeout to allow the current modal to close first
+                            setTimeout(() => {
+                                openArticleModal(relatedId);
+                            }, 300);
+                        }
+                    });
+                });
+                
+                // Show modal
+                articleModal.style.display = 'block';
+                
+                // Disable scrolling on body
+                document.body.style.overflow = 'hidden';
+            }
+            
+            function closeArticleModal() {
+                // Hide modal
+                articleModal.style.display = 'none';
+                
+                // Enable scrolling on body
+                document.body.style.overflow = 'auto';
+                
+                // Clear modal content
+                modalContent.innerHTML = '';
+                relatedArticles.innerHTML = '';
+            }
+            
+            function getRelatedArticles(article) {
+                // Get articles in the same category
+                const sameCategory = allArticles.filter(a => a.category === article.category && a.id !== article.id);
+                
+                // If we have enough articles in the same category, return 3 of them
+                if (sameCategory.length >= 3) {
+                    return sameCategory.slice(0, 3);
+                }
+                
+                // Otherwise, add some other articles to make up 3
+                const others = allArticles.filter(a => a.category !== article.category && a.id !== article.id);
+                
+                return [...sameCategory, ...others].slice(0, 3);
+            }
+            
+            function formatCategory(category) {
+                // Convert category-name to Category Name
+                return category
+                    .split('-')
+                    .map(word => word.charAt(0).toUpperCase() + word.slice(1))
+                    .join(' ');
+            }
+        });
+    </script>
+</body>
+</html>
